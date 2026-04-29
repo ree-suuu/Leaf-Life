@@ -1,0 +1,178 @@
+.rewards-container {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.stats-card {
+  display: flex;
+  padding: 2rem 1rem;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.points-display, .rank-display {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.stats-divider {
+  width: 1px;
+  background: var(--border-color);
+  margin: 0 1rem;
+}
+
+.star-icon { color: var(--accent); fill: var(--accent); }
+.trophy-icon { color: gold; fill: gold; }
+
+.points, .rank {
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text-primary);
+}
+
+.prize-banner {
+  background: var(--gradient-primary);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: white;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-md);
+}
+
+.prize-info h3 {
+  color: white;
+  font-size: 1.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.prize-info p {
+  font-size: 0.875rem;
+  opacity: 0.9;
+  margin-bottom: 0.75rem;
+}
+
+.time-left {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.prize-image {
+  font-size: 4rem;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+}
+
+.tasks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.task-item {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  background: var(--bg-surface);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.task-item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.task-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  margin-right: 1rem;
+}
+
+.bg-green { background: #e8f5e9; }
+.bg-orange { background: #fff3e0; }
+
+.task-info {
+  flex: 1;
+}
+
+.task-info h4 {
+  font-size: 1rem;
+  margin-bottom: 0.125rem;
+}
+
+.task-info p {
+  font-size: 0.875rem;
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.leaderboard {
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem;
+}
+
+.leaderboard-row {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.leaderboard-row:last-child {
+  border-bottom: none;
+}
+
+.leaderboard-row.top-three {
+  background: rgba(212, 163, 115, 0.05); /* very light accent */
+}
+
+.rank-number {
+  width: 32px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.top-three .rank-number {
+  color: var(--accent);
+}
+
+.user-avatar {
+  font-size: 1.5rem;
+  margin-right: 1rem;
+  background: var(--bg-main);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-name {
+  flex: 1;
+  font-weight: 500;
+}
+
+.user-points {
+  font-weight: 600;
+  color: var(--primary);
+}

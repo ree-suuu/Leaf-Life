@@ -1,0 +1,165 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* Brand Colors */
+  --primary: #2e603a; /* Deep elegant green */
+  --primary-light: #448053;
+  --primary-dark: #1e4226;
+  --accent: #d4a373; /* Earthy terracotta/gold */
+  
+  /* Backgrounds & Surfaces */
+  --bg-main: #f9fbf9; /* Off-white with a hint of green */
+  --bg-surface: #ffffff;
+  --bg-secondary: #eef2ef;
+  
+  /* Text */
+  --text-primary: #1a231c;
+  --text-secondary: #56685a;
+  --text-muted: #8d9e91;
+  --text-inverse: #ffffff;
+  
+  /* Utilities */
+  --border-color: #dce3dd;
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-full: 9999px;
+  
+  /* Shadows */
+  --shadow-sm: 0 2px 4px rgba(46, 96, 58, 0.05);
+  --shadow-md: 0 4px 12px rgba(46, 96, 58, 0.08);
+  --shadow-lg: 0 12px 24px rgba(46, 96, 58, 0.12);
+  
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+  --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.4) 100%);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+/* Base App Layout */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+  background-color: var(--bg-main);
+}
+
+.main-content {
+  flex: 1;
+  padding: 1rem;
+  padding-bottom: 80px; /* Space for bottom nav on mobile */
+  overflow-y: auto;
+}
+
+/* Typography */
+h1, h2, h3, h4 {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.title-large {
+  font-size: 2.5rem;
+  line-height: 1.2;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.02em;
+}
+
+.title-medium {
+  font-size: 1.75rem;
+  margin-bottom: 1rem;
+}
+
+.text-subtle {
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+
+/* Shared UI Components */
+.glass-panel {
+  background: var(--gradient-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-primary {
+  background: var(--gradient-primary);
+  color: var(--text-inverse);
+  padding: 0.875rem 1.5rem;
+  border-radius: var(--radius-full);
+  font-weight: 500;
+  font-size: 1rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(46, 96, 58, 0.2);
+}
+
+.btn-secondary {
+  background: var(--bg-surface);
+  color: var(--primary);
+  border: 1px solid var(--border-color);
+  padding: 0.875rem 1.5rem;
+  border-radius: var(--radius-full);
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background: var(--bg-secondary);
+  border-color: var(--primary-light);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+/* Responsive Overrides */
+@media (min-width: 768px) {
+  .main-content {
+    padding: 2rem;
+    padding-bottom: 2rem; /* Desktop doesn't need bottom nav space */
+  }
+}
