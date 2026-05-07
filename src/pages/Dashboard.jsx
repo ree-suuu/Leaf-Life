@@ -1,4 +1,5 @@
-import { Wind, Sprout, Plus, Settings } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Wind, Sprout, Plus, Settings, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import './Dashboard.css';
 
@@ -10,17 +11,36 @@ const OWNED_PLANTS = [
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const [userName, setUserName] = useState('');
+
+  useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      setUserName(user.fullName);
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    navigate('/login');
+  };
 
   return (
     <div className="animate-fade-in dashboard-container">
       <div className="dashboard-header">
         <div>
-          <h2 className="title-large" style={{ fontSize: '2rem', marginBottom: '0.25rem' }}>Hi, Alex 👋</h2>
+          <h2 className="title-large" style={{ fontSize: '2rem', marginBottom: '0.25rem' }}>Hi, {userName || 'Plant Parent'} 👋</h2>
           <p className="text-subtle">Your urban jungle is thriving.</p>
         </div>
-        <button className="btn-icon">
-          <Settings size={24} color="var(--text-secondary)" />
-        </button>
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <button className="btn-icon">
+            <Settings size={24} color="var(--text-secondary)" />
+          </button>
+          <button className="btn-icon" onClick={handleLogout} title="Log out">
+            <LogOut size={24} color="var(--text-secondary)" />
+          </button>
+        </div>
       </div>
       
       {/* Metrics Cards */}

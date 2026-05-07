@@ -12,11 +12,18 @@ dist
 dist-ssr
 *.local
 
+# Database
+*.db
+*.db-journal
+
+# OS files
+.DS_Store
+Thumbs.db
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
 .idea
-.DS_Store
 *.suo
 *.ntvs*
 *.njsproj

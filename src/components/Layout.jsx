@@ -1,6 +1,8 @@
 import { Outlet, NavLink, Link } from 'react-router-dom';
 import { Store, Camera, Trophy, LayoutDashboard } from 'lucide-react';
 import './Layout.css';
+import logo from "../assets/Leaf and Life logo.png";
+
 
 export default function Layout() {
   return (
@@ -8,7 +10,8 @@ export default function Layout() {
       {/* Top Navbar */}
       <header className="top-nav">
         <Link to="/" className="logo-link" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none', color: 'inherit' }}>
-          <img src="/logo.png" alt="Leaf and Life" className="app-logo" />
+          {/* <img src="/logo.png" alt="Leaf and Life" className="app-logo" /> */}
+         {<img src={logo} alt="Leaf and Life" className="app-logo" />} 
           <h1 className="logo-text">Leaf and Life</h1>
         </Link>
         <div className="desktop-nav">
