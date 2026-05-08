@@ -31,7 +31,7 @@ const db = new sqlite3.Database(DB_PATH, (err) => {
       createdAt TEXT NOT NULL
     )`);
 
-    // Create Plants Table
+    // Create Plants Table with scientific attributes
     db.run(`CREATE TABLE IF NOT EXISTS plants (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
@@ -39,6 +39,11 @@ const db = new sqlite3.Database(DB_PATH, (err) => {
       price TEXT NOT NULL,
       location TEXT NOT NULL,
       image TEXT NOT NULL,
+      space_tag TEXT NOT NULL,
+      sunlight_need TEXT NOT NULL,
+      min_temp INTEGER DEFAULT 10,
+      max_temp INTEGER DEFAULT 35,
+      purification_score INTEGER DEFAULT 5,
       is_sold INTEGER DEFAULT 0,
       buyer_id TEXT
     )`, (err) => {
@@ -47,17 +52,19 @@ const db = new sqlite3.Database(DB_PATH, (err) => {
         db.get('SELECT COUNT(*) as count FROM plants', (err, row) => {
           if (row && row.count === 0) {
             const initialPlants = [
-              ['Monstera Deliciosa', 'buy', '$25', '2 miles away', 'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&q=80&w=400'],
-              ['Snake Plant', 'swap', 'Trade', '1.5 miles away', 'https://images.unsplash.com/photo-1593482892290-f54927ae1bf7?auto=format&fit=crop&q=80&w=400'],
-              ['Pothos Vine', 'thrift', '$5', '0.5 miles away', 'https://images.unsplash.com/photo-1637967886160-fd78df3ef3f5?auto=format&fit=crop&q=80&w=400'],
-              ['Fiddle Leaf Fig', 'buy', '$45', '5 miles away', 'https://images.unsplash.com/photo-1597055181300-e3633a207519?auto=format&fit=crop&q=80&w=400'],
-              ['Aloe Vera', 'sell', '$10', 'Nearby', 'https://images.unsplash.com/photo-1596547609652-9cf5d8d76921?auto=format&fit=crop&q=80&w=400'],
-              ['Peace Lily', 'swap', 'Trade', '3 miles away', 'https://images.unsplash.com/photo-1599385846173-326241a49ec5?auto=format&fit=crop&q=80&w=400'],
+              ['Monstera Deliciosa', 'buy', '$25', '2 miles away', 'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&q=80&w=400', 'Indoor', 'Medium', 15, 30, 8],
+              ['Snake Plant', 'swap', 'Trade', '1.5 miles away', 'https://images.unsplash.com/photo-1593482892290-f54927ae1bf7?auto=format&fit=crop&q=80&w=400', 'Indoor', 'Low', 5, 35, 10],
+              ['Pothos Vine', 'thrift', '$5', '0.5 miles away', 'https://images.unsplash.com/photo-1637967886160-fd78df3ef3f5?auto=format&fit=crop&q=80&w=400', 'Indoor', 'Low', 10, 32, 9],
+              ['Fiddle Leaf Fig', 'buy', '$45', '5 miles away', 'https://images.unsplash.com/photo-1597055181300-e3633a207519?auto=format&fit=crop&q=80&w=400', 'Indoor', 'Medium', 18, 28, 7],
+              ['Aloe Vera', 'sell', '$10', 'Nearby', 'https://images.unsplash.com/photo-1596547609652-9cf5d8d76921?auto=format&fit=crop&q=80&w=400', 'Balcony', 'High', 10, 40, 7],
+              ['Peace Lily', 'swap', 'Trade', '3 miles away', 'https://images.unsplash.com/photo-1599385846173-326241a49ec5?auto=format&fit=crop&q=80&w=400', 'Indoor', 'Medium', 16, 30, 9],
+              ['Marigold', 'buy', '$2', 'Local Nursery', 'https://images.unsplash.com/photo-1591871937573-74dbba515c4c?auto=format&fit=crop&q=80&w=400', 'Rooftop', 'High', 15, 35, 4],
+              ['Areca Palm', 'buy', '$20', '1 mile away', 'https://images.unsplash.com/photo-1545239351-ef056c0b011c?auto=format&fit=crop&q=80&w=400', 'Indoor', 'Medium', 18, 32, 9]
             ];
-            const stmt = db.prepare('INSERT INTO plants (name, type, price, location, image) VALUES (?, ?, ?, ?, ?)');
+            const stmt = db.prepare('INSERT INTO plants (name, type, price, location, image, space_tag, sunlight_need, min_temp, max_temp, purification_score) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
             initialPlants.forEach(plant => stmt.run(plant));
             stmt.finalize();
-            console.log('Seed plants added to database.');
+            console.log('Simplified seed plants added to database.');
           }
         });
       }
@@ -79,6 +86,48 @@ const dbRun = (query, params) => new Promise((resolve, reject) => {
 const dbAll = (query, params) => new Promise((resolve, reject) => {
   db.all(query, params, (err, rows) => err ? reject(err) : resolve(rows));
 });
+
+// Helper for fetching weather data (Monthly Average)
+async function getMonthlyAverage(city) {
+  try {
+    const API_KEY = 'TFWSDCS3ZFEDCCJUHYLQHR7GD'; 
+    const month = new Date().getMonth() + 1; // 1-12
+    const currentYear = new Date().getFullYear();
+    
+    // We fetch statistical averages for the current month
+    // Format: https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/[location]/[date1]/[date2]
+    // Using a sample date range for the current month
+    const date1 = `${currentYear}-${month.toString().padStart(2, '0')}-01`;
+    const date2 = `${currentYear}-${month.toString().padStart(2, '0')}-28`;
+    
+    console.log(`Fetching climatology for ${city} in month ${month}...`);
+    
+    // For development, if no API key, return a reasonable default based on Nepal geography
+    if (API_KEY === 'YOUR_VISUAL_CROSSING_KEY') {
+      console.warn('No Visual Crossing API Key found. Using Nepal-specific fallbacks.');
+      const nepalClimates = {
+        'kathmandu': 22,
+        'pokhara': 24,
+        'biratnagar': 30,
+        'mustang': 12,
+        'chitwan': 28,
+        'namche': 8
+      };
+      return nepalClimates[city.toLowerCase()] || 20;
+    }
+
+    const url = `https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${city}/${date1}/${date2}?unitGroup=metric&include=stats&key=${API_KEY}&contentType=json`;
+    
+    const response = await fetch(url);
+    const data = await response.json();
+    
+    // Return the average temperature for the period
+    return data.currentConditions?.temp || data.days[0]?.temp || 20;
+  } catch (error) {
+    console.error('Weather API Error:', error);
+    return 20; // Default safe temp
+  }
+}
 
 // --- User Endpoints ---
 
@@ -139,6 +188,38 @@ app.get('/api/plants', async (req, res) => {
   }
 });
 
+// Recommend plants based on space, sunlight, and temperature
+app.get('/api/recommend', async (req, res) => {
+  try {
+    const { space, sunlight, location } = req.query;
+    let query = 'SELECT * FROM plants WHERE is_sold = 0';
+    const params = [];
+
+    if (space) {
+      query += ' AND space_tag = ?';
+      params.push(space);
+    }
+    if (sunlight) {
+      query += ' AND sunlight_need = ?';
+      params.push(sunlight);
+    }
+    
+    // If location is provided, fetch the real climatology data
+    if (location) {
+      const avgTemp = await getMonthlyAverage(location);
+      console.log(`Climatology Match: ${location} Avg Temp = ${avgTemp}°C`);
+      query += ' AND ? BETWEEN min_temp AND max_temp';
+      params.push(avgTemp);
+    }
+
+    const plants = await dbAll(query, params);
+    res.json(plants);
+  } catch (error) {
+    console.error('Recommendation Error:', error);
+    res.status(500).json({ error: 'Recommendation failed' });
+  }
+});
+
 // Buy a plant
 app.post('/api/plants/:id/buy', async (req, res) => {
   try {
@@ -157,5 +238,8 @@ app.post('/api/plants/:id/buy', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`=========================================`);
+  console.log(`SERVER RUNNING ON PORT ${PORT}`);
+  console.log(`API URL: http://localhost:${PORT}/api/plants`);
+  console.log(`=========================================`);
 });

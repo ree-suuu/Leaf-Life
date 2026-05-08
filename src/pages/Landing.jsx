@@ -21,17 +21,13 @@ export default function Landing() {
         async (position) => {
           try {
             const { latitude, longitude } = position.coords;
-            // Use OpenStreetMap Nominatim API (Free) for reverse geocoding
             const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
             const data = await response.json();
-            
-            // Try to find city, town, or village
             const cityName = data.address.city || data.address.town || data.address.village || data.address.county || "Nepal";
             setLocation(cityName);
-            console.log("Detected location:", data.address);
           } catch (error) {
             console.error("Geocoding error:", error);
-            setLocation("Kathmandu"); // Fallback
+            setLocation("Kathmandu");
           } finally {
             setLoading(false);
           }
@@ -49,28 +45,17 @@ export default function Landing() {
     e.preventDefault();
     setLoading(true);
     
-    // Map light levels to database tags
     const lightMap = { '1': 'Low', '2': 'Medium', '3': 'High' };
     const sunlight = lightMap[lightLevel];
-    const space = spaceType.charAt(0).toUpperCase() + spaceType.slice(1); // capitalize
-
-    // Mock temperature for Nepal based on location (simplified logic)
-    // In a real app, this would call a Weather API
-    let temp = 22; // Default for Kathmandu/Pokhara
-    if (location.toLowerCase().includes('mustang') || location.toLowerCase().includes('solu')) {
-      temp = 10;
-    } else if (location.toLowerCase().includes('biratnagar') || location.toLowerCase().includes('chitwan')) {
-      temp = 30;
-    }
+    const spaceMap = { 'indoor': 'Indoor', 'rooftop': 'Rooftop', 'balcony': 'Balcony', 'garden': 'Rooftop' };
+    const space = spaceMap[spaceType];
 
     try {
-      const response = await fetch(`/api/recommend?space=${space}&sunlight=${sunlight}&temp=${temp}`);
+      const response = await fetch(`/api/recommend?space=${space}&sunlight=${sunlight}&location=${location}`);
       
       if (!response.ok) {
-        // If proxy fails, try direct localhost
-        console.warn('Proxy fetch failed, trying direct localhost...');
-        const directResponse = await fetch(`http://localhost:5000/api/recommend?space=${space}&sunlight=${sunlight}&temp=${temp}`);
-        if (!directResponse.ok) throw new Error('Both proxy and direct fetch failed');
+        const directResponse = await fetch(`http://localhost:5000/api/recommend?space=${space}&sunlight=${sunlight}&location=${location}`);
+        if (!directResponse.ok) throw new Error('Recommendation failed');
         const data = await directResponse.json();
         setRecommendedPlants(data);
       } else {
@@ -137,7 +122,6 @@ export default function Landing() {
           <div className="hero-image">
             <img src="https://images.unsplash.com/photo-1604762524889-3e2fcc145683?auto=format&fit=crop&w=800&q=80" alt="Beautiful indoor plants" />
           </div>
-          {/* Floating cards */}
           <div className="floating-card air-quality">
             <Activity size={16} />
             <div>
@@ -198,7 +182,6 @@ export default function Landing() {
           {!showResults ? (
             <div className="location-form-container">
               <form onSubmit={handleRecommendationSubmit} className="smart-setup-form">
-                {/* Step 1 */}
                 <div className="form-group">
                   <label><span className="step-number">1</span> Where are you located?</label>
                   <div className="location-input-group">
@@ -218,7 +201,6 @@ export default function Landing() {
                   </div>
                 </div>
 
-                {/* Step 2 */}
                 <div className="form-group" style={{ marginTop: '1.5rem' }}>
                   <label><span className="step-number">2</span> Where will your new plant live?</label>
                   <div className="space-grid">
@@ -249,7 +231,6 @@ export default function Landing() {
                   </div>
                 </div>
 
-                {/* Step 3 */}
                 <div className="form-group" style={{ marginTop: '1.5rem' }}>
                   <label><span className="step-number">3</span> How much natural light does this spot get?</label>
                   <div className="light-slider-container">
@@ -263,17 +244,14 @@ export default function Landing() {
                       <div className={`light-label ${lightLevel === '1' ? 'active' : ''}`}>
                         <span className="emoji">☁️</span>
                         <span className="light-title">Low</span>
-                        <span className="light-desc">No direct windows</span>
                       </div>
                       <div className={`light-label ${lightLevel === '2' ? 'active' : ''}`}>
                         <span className="emoji">🌤️</span>
                         <span className="light-title">Medium</span>
-                        <span className="light-desc">Bright indirect light</span>
                       </div>
                       <div className={`light-label ${lightLevel === '3' ? 'active' : ''}`}>
                         <span className="emoji">☀️</span>
                         <span className="light-title">High</span>
-                        <span className="light-desc">Direct sun 6+ hrs</span>
                       </div>
                     </div>
                   </div>
@@ -326,7 +304,7 @@ export default function Landing() {
                   ))
                 ) : (
                   <div className="glass-panel" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '2rem' }}>
-                    <p className="text-subtle">No plants found for this specific combination in your current climate. Try a different space or light level!</p>
+                    <p className="text-subtle">No plants found for this specific combination. Try a different space or light level!</p>
                   </div>
                 )}
               </div>
