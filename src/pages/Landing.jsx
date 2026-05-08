@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Camera, Store, Trophy, Activity, Users, MapPin, ArrowRight } from 'lucide-react';
+import { Camera, Store, Trophy, Activity, Users, MapPin, ArrowRight, ShoppingBag } from 'lucide-react';
 import './Landing.css';
 import './Scan.css';
 import logo from "../assets/Leaf and Life logo.png";
@@ -10,25 +10,80 @@ export default function Landing() {
   const [spaceType, setSpaceType] = useState('indoor');
   const [lightLevel, setLightLevel] = useState('2');
   const [showResults, setShowResults] = useState(false);
+  const [recommendedPlants, setRecommendedPlants] = useState([]);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const requestLocation = () => {
     if ("geolocation" in navigator) {
+      setLoading(true);
       navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setLocation("New York, NY (Detected)");
+        async (position) => {
+          try {
+            const { latitude, longitude } = position.coords;
+            // Use OpenStreetMap Nominatim API (Free) for reverse geocoding
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+            const data = await response.json();
+            
+            // Try to find city, town, or village
+            const cityName = data.address.city || data.address.town || data.address.village || data.address.county || "Nepal";
+            setLocation(cityName);
+            console.log("Detected location:", data.address);
+          } catch (error) {
+            console.error("Geocoding error:", error);
+            setLocation("Kathmandu"); // Fallback
+          } finally {
+            setLoading(false);
+          }
         },
         (error) => {
           console.error("Location error", error);
           alert("Could not detect location. Please enter manually.");
+          setLoading(false);
         }
       );
     }
   };
 
-  const handleRecommendationSubmit = (e) => {
+  const handleRecommendationSubmit = async (e) => {
     e.preventDefault();
-    setShowResults(true);
+    setLoading(true);
+    
+    // Map light levels to database tags
+    const lightMap = { '1': 'Low', '2': 'Medium', '3': 'High' };
+    const sunlight = lightMap[lightLevel];
+    const space = spaceType.charAt(0).toUpperCase() + spaceType.slice(1); // capitalize
+
+    // Mock temperature for Nepal based on location (simplified logic)
+    // In a real app, this would call a Weather API
+    let temp = 22; // Default for Kathmandu/Pokhara
+    if (location.toLowerCase().includes('mustang') || location.toLowerCase().includes('solu')) {
+      temp = 10;
+    } else if (location.toLowerCase().includes('biratnagar') || location.toLowerCase().includes('chitwan')) {
+      temp = 30;
+    }
+
+    try {
+      const response = await fetch(`/api/recommend?space=${space}&sunlight=${sunlight}&temp=${temp}`);
+      
+      if (!response.ok) {
+        // If proxy fails, try direct localhost
+        console.warn('Proxy fetch failed, trying direct localhost...');
+        const directResponse = await fetch(`http://localhost:5000/api/recommend?space=${space}&sunlight=${sunlight}&temp=${temp}`);
+        if (!directResponse.ok) throw new Error('Both proxy and direct fetch failed');
+        const data = await directResponse.json();
+        setRecommendedPlants(data);
+      } else {
+        const data = await response.json();
+        setRecommendedPlants(data);
+      }
+      setShowResults(true);
+    } catch (error) {
+      console.error('RECOMMENDATION ERROR:', error);
+      alert(`Error: ${error.message}. Please ensure the backend is running.`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -36,7 +91,6 @@ export default function Landing() {
       {/* Header */}
       <header className="landing-header">
         <Link to="/" className="logo-section" style={{ textDecoration: 'none', color: 'inherit' }}>
-          {/* <img src="Leaf and Life logo.png" alt="Leaf and Life" className="app-logo" /> */}
           <img src={logo} alt="Leaf and Life" className="app-logo" />
           <span className="logo-text">Leaf and Life</span>
         </Link>
@@ -54,9 +108,6 @@ export default function Landing() {
       {/* Hero Section */}
       <section className="hero-section">
         <div className="hero-content">
-          {/* <div className="badge">
-            <span className="sparkle">✨</span> AI-Powered Plant Care
-          </div> */}
           <h1 className="hero-title">
             Grow smarter.<br />
             <span className="text-primary">Breathe better.</span>
@@ -228,8 +279,8 @@ export default function Landing() {
                   </div>
                 </div>
 
-                <button type="submit" className="btn-primary w-full mt-6">
-                  Get Recommendations <ArrowRight size={18} />
+                <button type="submit" className="btn-primary w-full mt-6" disabled={loading}>
+                  {loading ? 'Finding perfect plants...' : 'Get Recommendations'} <ArrowRight size={18} />
                 </button>
               </form>
             </div>
@@ -252,18 +303,32 @@ export default function Landing() {
               </div>
 
               <h3 className="section-title" style={{ fontSize: '1rem', marginBottom: '1rem', fontWeight: '600' }}>Top Matches</h3>
-              <div className="recommendations" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                {[1, 2].map(i => (
-                  <div key={i} className="plant-card" onClick={() => navigate('/marketplace')} style={{ background: 'var(--bg-surface)', borderRadius: '1rem', overflow: 'hidden', border: '1px solid var(--border-color)', cursor: 'pointer', transition: 'transform 0.2s ease' }}>
-                    <div className="plant-img-placeholder" style={{ height: '120px', background: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem' }}>
-                      {i === 1 ? '🌿' : '🪴'}
+              <div className="recommendations" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
+                {recommendedPlants.length > 0 ? (
+                  recommendedPlants.map(plant => (
+                    <div key={plant.id} className="plant-card" onClick={() => navigate('/marketplace')} style={{ background: 'var(--bg-surface)', borderRadius: '1rem', overflow: 'hidden', border: '1px solid var(--border-color)', cursor: 'pointer', transition: 'transform 0.2s ease' }}>
+                      <div className="plant-img-placeholder" style={{ height: '140px', background: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                        {plant.image.startsWith('http') ? (
+                          <img src={plant.image} alt={plant.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : (
+                          <span style={{ fontSize: '2.5rem' }}>{plant.image}</span>
+                        )}
+                      </div>
+                      <div className="plant-info" style={{ padding: '1rem' }}>
+                        <h4 style={{ fontSize: '1rem', marginBottom: '0.25rem', fontWeight: '600' }}>{plant.name}</h4>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
+                          <span style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem', background: 'var(--primary-light)', color: 'var(--primary)', borderRadius: '1rem', fontWeight: '600' }}>
+                            {plant.purification_score * 10}% Impact
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="plant-info" style={{ padding: '1rem' }}>
-                      <h4 style={{ fontSize: '1rem', marginBottom: '0.25rem', fontWeight: '600' }}>{i === 1 ? 'Snake Plant' : 'ZZ Plant'}</h4>
-                      <p style={{ fontSize: '0.875rem', color: 'var(--primary)', fontWeight: '600', margin: 0 }}>Perfect Match</p>
-                    </div>
+                  ))
+                ) : (
+                  <div className="glass-panel" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '2rem' }}>
+                    <p className="text-subtle">No plants found for this specific combination in your current climate. Try a different space or light level!</p>
                   </div>
-                ))}
+                )}
               </div>
             </div>
           )}
