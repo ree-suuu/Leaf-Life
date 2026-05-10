@@ -2,14 +2,14 @@ export const MVP_PLANTS = [
   {
     name: 'ZZ Plant',
     type: 'buy',
-    price: '$15',
+    price: '$20',
     location: 'Local Nursery',
     image: 'https://images.unsplash.com/photo-1632207691143-643e2a9a9361?auto=format&fit=crop&q=80&w=400',
     space_tag: 'indoor,balcony', 
     sunlight_need: '1', 
     min_temp: 15,
     max_temp: 32,
-    purification_score: 8
+    purification_score: 10
   },
   {
     name: 'Snake Plant',
@@ -26,19 +26,19 @@ export const MVP_PLANTS = [
   {
     name: 'Peace Lily',
     type: 'buy',
-    price: '$18',
+    price: '$10',
     location: 'Local Nursery',
     image: 'https://images.unsplash.com/photo-1599385846173-326241a49ec5?auto=format&fit=crop&q=80&w=400',
     space_tag: 'indoor,balcony', // Can be in balcony if shaded
     sunlight_need: '2', // Needs at least Medium
     min_temp: 18,
     max_temp: 30,
-    purification_score: 9
+    purification_score: 10
   },
   {
     name: 'Jade Plant',
     type: 'buy',
-    price: '$10',
+    price: '$20',
     location: 'Local Nursery',
     image: 'https://images.unsplash.com/photo-1610024103911-9f223126be8e?auto=format&fit=crop&q=80&w=400',
     space_tag: 'indoor,balcony,rooftop,garden', // High light indoor or any outdoor
@@ -50,7 +50,7 @@ export const MVP_PLANTS = [
   {
     name: 'Aloe Vera',
     type: 'buy',
-    price: '$8',
+    price: '$5',
     location: 'Local Nursery',
     image: 'https://images.unsplash.com/photo-1596547609652-9cf5d8d76921?auto=format&fit=crop&q=80&w=400',
     space_tag: 'balcony,rooftop,garden',
