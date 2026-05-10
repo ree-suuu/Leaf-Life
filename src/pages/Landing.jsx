@@ -288,11 +288,10 @@ export default function Landing() {
                 </ul>
               </div>
 
-              <h3 className="section-title" style={{ fontSize: '1rem', marginBottom: '1rem', fontWeight: '600' }}>Top Matches</h3>
               <div className="recommendations" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
                 {recommendedPlants.length > 0 ? (
                   recommendedPlants.map(plant => (
-                    <div key={plant.id} className="plant-card" onClick={() => navigate('/marketplace')} style={{ background: 'var(--bg-surface)', borderRadius: '1rem', overflow: 'hidden', border: '1px solid var(--border-color)', cursor: 'pointer', transition: 'transform 0.2s ease' }}>
+                    <div key={plant.id} className="plant-card" onClick={() => navigate(`/purchase/${plant.id}`)} style={{ background: 'var(--bg-surface)', borderRadius: '1rem', overflow: 'hidden', border: '1px solid var(--border-color)', cursor: 'pointer', transition: 'transform 0.2s ease' }}>
                       <div className="plant-img-placeholder" style={{ height: '140px', background: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                         {plant.image.startsWith('http') ? (
                           <img src={plant.image} alt={plant.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />

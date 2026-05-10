@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import Purchase from './pages/Purchase';
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
           <Route path="/scan" element={<Scan />} />
           <Route path="/rewards" element={<Rewards />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/purchase/:id" element={<Purchase />} />
         </Route>
       </Routes>
     </BrowserRouter>
