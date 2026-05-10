@@ -4,7 +4,7 @@ export const MVP_PLANTS = [
     type: 'buy',
     price: '$20',
     location: 'Local Nursery',
-    image: 'https://images.unsplash.com/photo-1632207691143-643e2a9a9361?auto=format&fit=crop&q=80&w=400',
+    image: '/plant_images/ZZ.jpg',
     space_tag: 'indoor,balcony', 
     sunlight_need: '1', 
     min_temp: 15,
@@ -28,7 +28,7 @@ export const MVP_PLANTS = [
     type: 'buy',
     price: '$10',
     location: 'Local Nursery',
-    image: 'https://images.unsplash.com/photo-1599385846173-326241a49ec5?auto=format&fit=crop&q=80&w=400',
+    image: '/plant_images/peacelily.jpg',
     space_tag: 'indoor,balcony', // Can be in balcony if shaded
     sunlight_need: '2', // Needs at least Medium
     min_temp: 18,
@@ -40,7 +40,7 @@ export const MVP_PLANTS = [
     type: 'buy',
     price: '$20',
     location: 'Local Nursery',
-    image: 'https://images.unsplash.com/photo-1610024103911-9f223126be8e?auto=format&fit=crop&q=80&w=400',
+    image: '/plant_images/jadeplant.jpg',
     space_tag: 'indoor,balcony,rooftop,garden', // High light indoor or any outdoor
     sunlight_need: '3', // Needs High light
     min_temp: 10,
