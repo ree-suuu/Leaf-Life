@@ -23,7 +23,15 @@ export default function Landing() {
             const { latitude, longitude } = position.coords;
             const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
             const data = await response.json();
-            const cityName = data.address.city || data.address.town || data.address.village || data.address.county || "Nepal";
+            
+            // Enhanced precision logic
+            const address = data.address;
+            const place = address.suburb || address.neighbourhood || address.city_district || address.village || address.town;
+            const city = address.city || address.county || "";
+            
+            // Only join if place and city are different
+            const cityName = place && city && place !== city ? `${place}, ${city}` : (place || city || "Nepal");
+            
             setLocation(cityName);
           } catch (error) {
             console.error("Geocoding error:", error);

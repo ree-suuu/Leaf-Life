@@ -54,9 +54,23 @@ export default function Scan() {
   const requestLocation = () => {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
-        (position) => {
-          // Mock geocoding
-          setLocation("New York, NY (Detected)");
+        async (position) => {
+          try {
+            const { latitude, longitude } = position.coords;
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+            const data = await response.json();
+            
+            // Enhanced precision logic
+            const address = data.address;
+            const place = address.suburb || address.neighbourhood || address.city_district || address.village || address.town;
+            const city = address.city || address.county || "";
+            
+            const cityName = place && city && place !== city ? `${place}, ${city}` : (place || city || "Nepal");
+            setLocation(cityName);
+          } catch (error) {
+            console.error("Geocoding error:", error);
+            setLocation("Kathmandu");
+          }
         },
         (error) => {
           console.error("Location error", error);
