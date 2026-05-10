@@ -16,7 +16,7 @@ export const MVP_PLANTS = [
     type: 'buy',
     price: '$12',
     location: 'Local Nursery',
-    image: 'https://images.unsplash.com/photo-1593482892290-f54927ae1bf7?auto=format&fit=crop&q=80&w=400',
+    image: '/plantimages/snake-plant.png',
     space_tag: 'indoor,balcony,rooftop,garden', // The Universal Plant
     sunlight_need: '1', // Level 1 covers 1, 2, and 3
     min_temp: 5, // Extra hardy for Nepal winters

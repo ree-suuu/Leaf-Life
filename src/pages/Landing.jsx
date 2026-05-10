@@ -293,7 +293,7 @@ export default function Landing() {
                   recommendedPlants.map(plant => (
                     <div key={plant.id} className="plant-card" onClick={() => navigate(`/purchase/${plant.id}`)} style={{ background: 'var(--bg-surface)', borderRadius: '1rem', overflow: 'hidden', border: '1px solid var(--border-color)', cursor: 'pointer', transition: 'transform 0.2s ease' }}>
                       <div className="plant-img-placeholder" style={{ height: '140px', background: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                        {plant.image.startsWith('http') ? (
+                        {plant.image.startsWith('http') || plant.image.startsWith('/') ? (
                           <img src={plant.image} alt={plant.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         ) : (
                           <span style={{ fontSize: '2.5rem' }}>{plant.image}</span>
