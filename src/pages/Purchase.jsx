@@ -59,8 +59,8 @@ export default function Purchase() {
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'window.innerWidth > 600 ? "1fr 1fr" : "1fr"', gap: '2rem' }}>
-          <div style={{ borderRadius: '1.5rem', overflow: 'hidden', height: '300px', backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
-            <img src={plant.image} alt={plant.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <div style={{ borderRadius: '1.5rem', overflow: 'hidden', height: '350px', backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <img src={plant.image} alt={plant.name} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '1rem' }} />
           </div>
 
           <div>
