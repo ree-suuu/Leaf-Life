@@ -4,6 +4,7 @@ import path from 'path';
 import bcrypt from 'bcryptjs';
 import sqlite3 from 'sqlite3';
 import { fileURLToPath } from 'url';
+import { MVP_PLANTS } from './plantRules.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -51,20 +52,25 @@ const db = new sqlite3.Database(DB_PATH, (err) => {
         // Seed initial data if table is empty
         db.get('SELECT COUNT(*) as count FROM plants', (err, row) => {
           if (row && row.count === 0) {
-            const initialPlants = [
-              ['Monstera Deliciosa', 'buy', '$25', '2 miles away', 'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&q=80&w=400', 'Indoor', 'Medium', 15, 30, 8],
-              ['Snake Plant', 'swap', 'Trade', '1.5 miles away', 'https://images.unsplash.com/photo-1593482892290-f54927ae1bf7?auto=format&fit=crop&q=80&w=400', 'Indoor', 'Low', 5, 35, 10],
-              ['Pothos Vine', 'thrift', '$5', '0.5 miles away', 'https://images.unsplash.com/photo-1637967886160-fd78df3ef3f5?auto=format&fit=crop&q=80&w=400', 'Indoor', 'Low', 10, 32, 9],
-              ['Fiddle Leaf Fig', 'buy', '$45', '5 miles away', 'https://images.unsplash.com/photo-1597055181300-e3633a207519?auto=format&fit=crop&q=80&w=400', 'Indoor', 'Medium', 18, 28, 7],
-              ['Aloe Vera', 'sell', '$10', 'Nearby', 'https://images.unsplash.com/photo-1596547609652-9cf5d8d76921?auto=format&fit=crop&q=80&w=400', 'Balcony', 'High', 10, 40, 7],
-              ['Peace Lily', 'swap', 'Trade', '3 miles away', 'https://images.unsplash.com/photo-1599385846173-326241a49ec5?auto=format&fit=crop&q=80&w=400', 'Indoor', 'Medium', 16, 30, 9],
-              ['Marigold', 'buy', '$2', 'Local Nursery', 'https://images.unsplash.com/photo-1591871937573-74dbba515c4c?auto=format&fit=crop&q=80&w=400', 'Rooftop', 'High', 15, 35, 4],
-              ['Areca Palm', 'buy', '$20', '1 mile away', 'https://images.unsplash.com/photo-1545239351-ef056c0b011c?auto=format&fit=crop&q=80&w=400', 'Indoor', 'Medium', 18, 32, 9]
-            ];
             const stmt = db.prepare('INSERT INTO plants (name, type, price, location, image, space_tag, sunlight_need, min_temp, max_temp, purification_score) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-            initialPlants.forEach(plant => stmt.run(plant));
+            
+            MVP_PLANTS.forEach(plant => {
+              stmt.run([
+                plant.name, 
+                plant.type, 
+                plant.price, 
+                plant.location, 
+                plant.image, 
+                plant.space_tag, 
+                plant.sunlight_need, 
+                plant.min_temp, 
+                plant.max_temp, 
+                plant.purification_score
+              ]);
+            });
+            
             stmt.finalize();
-            console.log('Simplified seed plants added to database.');
+            console.log('MVP seed plants added to database.');
           }
         });
       }
@@ -196,11 +202,12 @@ app.get('/api/recommend', async (req, res) => {
     const params = [];
 
     if (space) {
-      query += ' AND space_tag = ?';
-      params.push(space);
+      query += ' AND space_tag LIKE ?';
+      params.push(`%${space}%`);
     }
     if (sunlight) {
-      query += ' AND sunlight_need = ?';
+      // Inclusive matching: plants that need LESS than or equal to the available light
+      query += ' AND sunlight_need <= ?';
       params.push(sunlight);
     }
     
