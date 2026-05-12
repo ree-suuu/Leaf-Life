@@ -244,19 +244,48 @@ app.get('/api/recommend', async (req, res) => {
   }
 });
 
-// Buy a plant
+// Buy one or more plants
 app.post('/api/plants/:id/buy', async (req, res) => {
   try {
     const { id } = req.params;
-    const { userId } = req.body;
+    const { userId, quantity = 1 } = req.body;
 
     const plant = await dbGet('SELECT * FROM plants WHERE id = ?', [id]);
     if (!plant) return res.status(404).json({ error: 'Plant not found' });
-    if (plant.is_sold) return res.status(400).json({ error: 'Plant already sold' });
+    
+    // In a multi-quantity scenario, the first plant is marked as sold to the user
+    if (plant.is_sold && plant.buyer_id !== userId) {
+      return res.status(400).json({ error: 'Plant already sold' });
+    }
 
+    // Update the original plant record
     await dbRun('UPDATE plants SET is_sold = 1, buyer_id = ? WHERE id = ?', [userId, id]);
-    res.json({ message: 'Plant purchased successfully' });
+
+    // If quantity > 1, create additional records for the user
+    if (quantity > 1) {
+      const stmt = db.prepare('INSERT INTO plants (name, type, price, location, image, space_tag, sunlight_need, min_temp, max_temp, purification_score, is_sold, buyer_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)');
+      
+      for (let i = 1; i < quantity; i++) {
+        stmt.run([
+          plant.name, 
+          plant.type, 
+          plant.price, 
+          plant.location, 
+          plant.image, 
+          plant.space_tag, 
+          plant.sunlight_need, 
+          plant.min_temp, 
+          plant.max_temp, 
+          plant.purification_score,
+          userId
+        ]);
+      }
+      stmt.finalize();
+    }
+
+    res.json({ message: `Successfully purchased ${quantity} ${plant.name}(s)` });
   } catch (error) {
+    console.error('Purchase Error:', error);
     res.status(500).json({ error: 'Purchase failed' });
   }
 });

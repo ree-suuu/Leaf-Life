@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MapPin, CheckCircle, ShieldCheck, ShoppingCart, Lock, X } from 'lucide-react';
+import { ArrowLeft, MapPin, CheckCircle, ShieldCheck, ShoppingCart, Lock, X, Minus, Plus } from 'lucide-react';
 
 export default function Purchase() {
   const { id } = useParams();
@@ -10,6 +10,10 @@ export default function Purchase() {
   const [purchasing, setPurchasing] = useState(false);
   const [success, setSuccess] = useState(false);
   
+  // Quantity State
+  const [showQuantitySelector, setShowQuantitySelector] = useState(false);
+  const [quantity, setQuantity] = useState(1);
+
   // Password Verification State
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
   const [password, setPassword] = useState('');
@@ -33,6 +37,11 @@ export default function Purchase() {
   }, [id]);
 
   const handleBuyClick = () => {
+    setShowQuantitySelector(true);
+  };
+
+  const handleProceedToVerify = () => {
+    setShowQuantitySelector(false);
     setShowPasswordPrompt(true);
     setError('');
   };
@@ -62,11 +71,11 @@ export default function Purchase() {
         setShowPasswordPrompt(false);
         setPurchasing(true);
         
-        // Finalize purchase
+        // Finalize purchase with quantity
         const buyResponse = await fetch(`/api/plants/${id}/buy`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: user.id })
+          body: JSON.stringify({ userId: user.id, quantity })
         });
 
         if (buyResponse.ok) {
@@ -103,7 +112,9 @@ export default function Purchase() {
             <CheckCircle size={32} />
           </div>
           <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '0.5rem' }}>Purchase Successful!</h2>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>You have successfully purchased the {plant.name}. The nursery will contact you for delivery.</p>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
+            You have successfully purchased {quantity} {plant.name}(s). The nursery will contact you for delivery.
+          </p>
           <button onClick={() => navigate('/dashboard')} className="btn-primary" style={{ width: '100%', maxWidth: '300px' }}>Go to Dashboard</button>
         </div>
       ) : (
@@ -147,7 +158,7 @@ export default function Purchase() {
 
             <button 
               onClick={handleBuyClick} 
-              disabled={purchasing || showPasswordPrompt}
+              disabled={purchasing || showPasswordPrompt || showQuantitySelector}
               className="btn-primary" 
               style={{ width: '100%', padding: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', fontSize: '1rem' }}
             >
@@ -157,6 +168,46 @@ export default function Purchase() {
                   Buy Now
                 </>
               )}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Quantity Selector Modal */}
+      {showQuantitySelector && (
+        <div style={{ 
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
+          backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem'
+        }}>
+          <div className="glass-panel animate-scale-up" style={{ 
+            backgroundColor: 'var(--bg-surface)', padding: '2rem', borderRadius: '1.5rem', 
+            width: '100%', maxWidth: '400px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)', position: 'relative'
+          }}>
+            <button onClick={() => setShowQuantitySelector(false)} style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}><X size={20} /></button>
+            <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: '700', marginBottom: '0.5rem' }}>Select Quantity</h2>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>How many {plant.name}s do you want to buy?</p>
+            </div>
+            
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2rem', marginBottom: '2.5rem' }}>
+              <button 
+                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                style={{ width: '48px', height: '48px', borderRadius: '12px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+              >
+                <Minus size={20} />
+              </button>
+              <span style={{ fontSize: '2rem', fontWeight: '700', width: '40px', textAlign: 'center' }}>{quantity}</span>
+              <button 
+                onClick={() => setQuantity(Math.min(10, quantity + 1))}
+                style={{ width: '48px', height: '48px', borderRadius: '12px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+              >
+                <Plus size={20} />
+              </button>
+            </div>
+
+            <button onClick={handleProceedToVerify} className="btn-primary" style={{ width: '100%', padding: '0.75rem' }}>
+              Confirm & Proceed
             </button>
           </div>
         </div>
@@ -197,6 +248,7 @@ export default function Purchase() {
               </div>
               <h2 style={{ fontSize: '1.25rem', fontWeight: '700' }}>Confirm Purchase</h2>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>enter ur password</p>
+              <p style={{ marginTop: '0.5rem', fontWeight: '600' }}>Total: {quantity} × {plant.name}</p>
             </div>
 
             <form onSubmit={handleVerifyAndBuy}>
