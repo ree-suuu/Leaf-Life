@@ -1,22 +1,13 @@
 import { useState } from 'react';
 import { Search, Filter, Heart, MapPin } from 'lucide-react';
+import { MVP_PLANTS } from '../data/plantRules';
 import './Marketplace.css';
-
-// Original Mock Data
-const PLANTS = [
-  { id: 1, name: 'Monstera Deliciosa', type: 'buy', price: '$25', location: '2 miles away', image: '🪴' },
-  { id: 2, name: 'Snake Plant', type: 'swap', price: 'Trade', location: '1.5 miles away', image: '🌵' },
-  { id: 3, name: 'Pothos Vine', type: 'thrift', price: '$5', location: '0.5 miles away', image: '🌿' },
-  { id: 4, name: 'Fiddle Leaf Fig', type: 'buy', price: '$45', location: '5 miles away', image: '🌳' },
-  { id: 5, name: 'Aloe Vera', type: 'sell', price: '$10', location: 'You', image: '🌱' },
-  { id: 6, name: 'Peace Lily', type: 'swap', price: 'Trade', location: '3 miles away', image: '🌺' },
-];
 
 export default function Marketplace() {
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const filteredPlants = PLANTS.filter(plant => {
+  const filteredPlants = MVP_PLANTS.filter(plant => {
     if (activeTab !== 'all' && plant.type !== activeTab) return false;
     if (searchQuery && !plant.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     return true;
@@ -51,10 +42,17 @@ export default function Marketplace() {
       </div>
 
       <div className="plants-grid">
-        {filteredPlants.map(plant => (
-          <div key={plant.id} className="plant-card">
+        {filteredPlants.map((plant, index) => (
+          <div key={`${plant.name}-${index}`} className="plant-card">
             <div className="plant-image">
-              <div className="image-placeholder">{plant.image}</div>
+              <img 
+                src={plant.image} 
+                alt={plant.name} 
+                className="plant-img-actual"
+                onError={(e) => {
+                  e.target.src = 'https://images.unsplash.com/photo-1545239351-ef35f43d514b?q=80&w=400';
+                }}
+              />
               <div className="badge">{plant.type}</div>
               <button className="like-btn"><Heart size={18} /></button>
             </div>

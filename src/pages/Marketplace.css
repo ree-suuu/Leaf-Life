@@ -115,10 +115,6 @@
   transform: scale(1.1);
 }
 
-.image-placeholder {
-  font-size: 4rem;
-}
-
 .badge {
   position: absolute;
   top: 0.5rem;
