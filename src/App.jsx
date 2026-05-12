@@ -4,6 +4,7 @@ import Marketplace from './pages/Marketplace';
 import Scan from './pages/Scan';
 import Rewards from './pages/Rewards';
 import Dashboard from './pages/Dashboard';
+import SmartRecommendation from './pages/SmartRecommendation';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
@@ -17,10 +18,11 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route element={<Layout />}>
-          <Route path="/marketplace" element={<Marketplace />} />
-          <Route path="/scan" element={<Scan />} />
-          <Route path="/rewards" element={<Rewards />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/recommend" element={<SmartRecommendation />} />
+          <Route path="/scan" element={<Scan />} />
+          <Route path="/marketplace" element={<Marketplace />} />
+          <Route path="/rewards" element={<Rewards />} />
           <Route path="/purchase/:id" element={<Purchase />} />
         </Route>
       </Routes>

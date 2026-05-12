@@ -1,5 +1,5 @@
 import { Outlet, NavLink, Link } from 'react-router-dom';
-import { Store, Camera, Trophy, LayoutDashboard } from 'lucide-react';
+import { Store, Camera, Trophy, LayoutDashboard, Sparkles } from 'lucide-react';
 import './Layout.css';
 import logo from "../assets/Leaf and Life logo.png";
 
@@ -10,15 +10,15 @@ export default function Layout() {
       {/* Top Navbar */}
       <header className="top-nav">
         <Link to="/" className="logo-link" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none', color: 'inherit' }}>
-          {/* <img src="/logo.png" alt="Leaf and Life" className="app-logo" /> */}
          {<img src={logo} alt="Leaf and Life" className="app-logo" />} 
           <h1 className="logo-text">Leaf and Life</h1>
         </Link>
         <div className="desktop-nav">
-          <NavLink to="/marketplace" className={({isActive}) => isActive ? "desktop-nav-item active" : "desktop-nav-item"}>Marketplace</NavLink>
-          <NavLink to="/scan" className={({isActive}) => isActive ? "desktop-nav-item active" : "desktop-nav-item"}>Smart Scan</NavLink>
-          <NavLink to="/rewards" className={({isActive}) => isActive ? "desktop-nav-item active" : "desktop-nav-item"}>Community</NavLink>
           <NavLink to="/dashboard" className={({isActive}) => isActive ? "desktop-nav-item active" : "desktop-nav-item"}>Dashboard</NavLink>
+          <NavLink to="/recommend" className={({isActive}) => isActive ? "desktop-nav-item active" : "desktop-nav-item"}>Smart Recommendation</NavLink>
+          <NavLink to="/scan" className={({isActive}) => isActive ? "desktop-nav-item active" : "desktop-nav-item"}>Smart Scan</NavLink>
+          <NavLink to="/marketplace" className={({isActive}) => isActive ? "desktop-nav-item active" : "desktop-nav-item"}>Marketplace</NavLink>
+          <NavLink to="/rewards" className={({isActive}) => isActive ? "desktop-nav-item active" : "desktop-nav-item"}>Community</NavLink>
         </div>
       </header>
 
@@ -32,6 +32,10 @@ export default function Layout() {
         <NavLink to="/dashboard" className={({isActive}) => isActive ? "nav-item active" : "nav-item"}>
           <LayoutDashboard size={24} />
           <span>Dashboard</span>
+        </NavLink>
+        <NavLink to="/recommend" className={({isActive}) => isActive ? "nav-item active" : "nav-item"}>
+          <Sparkles size={24} />
+          <span>Smart Rec</span>
         </NavLink>
         <NavLink to="/scan" className={({isActive}) => isActive ? "nav-item active" : "nav-item"}>
           <div className="scan-btn">
