@@ -137,6 +137,23 @@ async function getMonthlyAverage(city) {
 
 // --- User Endpoints ---
 
+app.post('/api/verify-password', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) return res.status(400).json({ error: 'Email and password are required' });
+
+    const user = await dbGet('SELECT * FROM users WHERE email = ?', [email]);
+    if (!user) return res.status(400).json({ error: 'User not found' });
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(400).json({ error: 'Incorrect password' });
+
+    res.json({ success: true, message: 'Password verified' });
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 app.post('/api/signup', async (req, res) => {
   try {
     const { fullName, email, password } = req.body;

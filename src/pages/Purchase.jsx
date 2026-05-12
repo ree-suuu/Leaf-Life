@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MapPin, CheckCircle, ShieldCheck, ShoppingCart } from 'lucide-react';
+import { ArrowLeft, MapPin, CheckCircle, ShieldCheck, ShoppingCart, Lock, X } from 'lucide-react';
 
 export default function Purchase() {
   const { id } = useParams();
@@ -9,6 +9,12 @@ export default function Purchase() {
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState(false);
   const [success, setSuccess] = useState(false);
+  
+  // Password Verification State
+  const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
+  const [password, setPassword] = useState('');
+  const [verifying, setVerifying] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchPlant = async () => {
@@ -26,14 +32,57 @@ export default function Purchase() {
     fetchPlant();
   }, [id]);
 
-  const handleBuy = async () => {
-    setPurchasing(true);
-    // Simulate API call
-    setTimeout(() => {
-      setPurchasing(false);
-      setSuccess(true);
-      // In a real app, we would call the /api/plants/:id/buy endpoint
-    }, 1500);
+  const handleBuyClick = () => {
+    setShowPasswordPrompt(true);
+    setError('');
+  };
+
+  const handleVerifyAndBuy = async (e) => {
+    e.preventDefault();
+    setVerifying(true);
+    setError('');
+
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user || !user.email) {
+      setError('User session not found. Please log in again.');
+      setVerifying(false);
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/verify-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: user.email, password })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setShowPasswordPrompt(false);
+        setPurchasing(true);
+        
+        // Finalize purchase
+        const buyResponse = await fetch(`/api/plants/${id}/buy`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: user.id })
+        });
+
+        if (buyResponse.ok) {
+          setSuccess(true);
+        } else {
+          setError('Purchase failed. Please try again.');
+        }
+        setPurchasing(false);
+      } else {
+        setError(data.error || 'Verification failed');
+      }
+    } catch (err) {
+      setError('Connection error. Please try again.');
+    } finally {
+      setVerifying(false);
+    }
   };
 
   if (loading) return <div style={{ padding: '2rem', textAlign: 'center' }}>Loading plant details...</div>;
@@ -97,8 +146,8 @@ export default function Purchase() {
             </div>
 
             <button 
-              onClick={handleBuy} 
-              disabled={purchasing}
+              onClick={handleBuyClick} 
+              disabled={purchasing || showPasswordPrompt}
               className="btn-primary" 
               style={{ width: '100%', padding: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', fontSize: '1rem' }}
             >
@@ -112,6 +161,79 @@ export default function Purchase() {
           </div>
         </div>
       )}
+
+      {/* Password Prompt Modal */}
+      {showPasswordPrompt && (
+        <div style={{ 
+          position: 'fixed', 
+          top: 0, left: 0, right: 0, bottom: 0, 
+          backgroundColor: 'rgba(0,0,0,0.5)', 
+          backdropFilter: 'blur(4px)',
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          zIndex: 1000,
+          padding: '1rem'
+        }}>
+          <div className="glass-panel animate-scale-up" style={{ 
+            backgroundColor: 'var(--bg-surface)', 
+            padding: '2rem', 
+            borderRadius: '1.5rem', 
+            width: '100%', 
+            maxWidth: '400px',
+            boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)',
+            position: 'relative'
+          }}>
+            <button 
+              onClick={() => setShowPasswordPrompt(false)}
+              style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}
+            >
+              <X size={20} />
+            </button>
+
+            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+              <div style={{ width: '48px', height: '48px', backgroundColor: 'var(--bg-secondary)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
+                <Lock size={24} color="var(--primary)" />
+              </div>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: '700' }}>Confirm Purchase</h2>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>enter ur password</p>
+            </div>
+
+            <form onSubmit={handleVerifyAndBuy}>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <input 
+                  type="password" 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  autoFocus
+                  required
+                  style={{ 
+                    width: '100%', 
+                    padding: '0.75rem 1rem', 
+                    borderRadius: '0.75rem', 
+                    border: '1px solid var(--border-color)',
+                    backgroundColor: 'var(--bg-secondary)',
+                    color: 'var(--text-primary)',
+                    fontSize: '1rem'
+                  }}
+                />
+                {error && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.5rem' }}>{error}</p>}
+              </div>
+
+              <button 
+                type="submit" 
+                disabled={verifying}
+                className="btn-primary" 
+                style={{ width: '100%', padding: '0.75rem' }}
+              >
+                {verifying ? 'Verifying...' : 'Verify & Buy'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
