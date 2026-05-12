@@ -255,7 +255,7 @@ export default function Scan() {
                 <div className="plant-img-placeholder">🪴</div>
                 <div className="plant-info">
                   <h4>Philodendron</h4>
-                  <p>$25 • Thrift</p>
+                  <p>Rs. 25 • Thrift</p>
                 </div>
               </div>
             ))}
