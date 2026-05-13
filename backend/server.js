@@ -2,96 +2,107 @@ import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import bcrypt from 'bcryptjs';
-import sqlite3 from 'sqlite3';
+import mysql from 'mysql2/promise';
+import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { MVP_PLANTS } from './plantRules.js';
+
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = 5000;
-const DB_PATH = path.join(__dirname, 'database.db');
+const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
 
-// Initialize SQLite Database
-const db = new sqlite3.Database(DB_PATH, (err) => {
-  if (err) {
-    console.error('Error opening database:', err.message);
-  } else {
-    console.log('Connected to the SQLite database.');
-    
-    // Create Users Table
-    db.run(`CREATE TABLE IF NOT EXISTS users (
-      id TEXT PRIMARY KEY,
-      fullName TEXT NOT NULL,
-      email TEXT UNIQUE NOT NULL,
-      password TEXT NOT NULL,
-      createdAt TEXT NOT NULL
-    )`);
-
-    // Create Plants Table with scientific attributes
-    db.run(`CREATE TABLE IF NOT EXISTS plants (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      type TEXT NOT NULL,
-      price TEXT NOT NULL,
-      location TEXT NOT NULL,
-      image TEXT NOT NULL,
-      space_tag TEXT NOT NULL,
-      sunlight_need TEXT NOT NULL,
-      min_temp INTEGER DEFAULT 10,
-      max_temp INTEGER DEFAULT 35,
-      purification_score INTEGER DEFAULT 5,
-      is_sold INTEGER DEFAULT 0,
-      buyer_id TEXT
-    )`, (err) => {
-      if (!err) {
-        // Seed initial data if table is empty
-        db.get('SELECT COUNT(*) as count FROM plants', (err, row) => {
-          if (row && row.count === 0) {
-            const stmt = db.prepare('INSERT INTO plants (name, type, price, location, image, space_tag, sunlight_need, min_temp, max_temp, purification_score) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-            
-            MVP_PLANTS.forEach(plant => {
-              stmt.run([
-                plant.name, 
-                plant.type, 
-                plant.price, 
-                plant.location, 
-                plant.image, 
-                plant.space_tag, 
-                plant.sunlight_need, 
-                plant.min_temp, 
-                plant.max_temp, 
-                plant.purification_score
-              ]);
-            });
-            
-            stmt.finalize();
-            console.log('MVP seed plants added to database.');
-          }
-        });
-      }
-    });
-  }
+// MySQL Connection Pool
+const pool = mysql.createPool({
+  host: process.env.DB_HOST || 'localhost',
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '',
+  database: process.env.DB_NAME || 'plant_app',
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
 });
 
 // Helper for DB queries using Promises
-const dbGet = (query, params) => new Promise((resolve, reject) => {
-  db.get(query, params, (err, row) => err ? reject(err) : resolve(row));
-});
+const dbGet = async (query, params) => {
+  const [rows] = await pool.execute(query, params);
+  return rows[0];
+};
 
-const dbRun = (query, params) => new Promise((resolve, reject) => {
-  db.run(query, params, function(err) {
-    err ? reject(err) : resolve(this);
-  });
-});
+const dbRun = async (query, params) => {
+  const [result] = await pool.execute(query, params);
+  return result;
+};
 
-const dbAll = (query, params) => new Promise((resolve, reject) => {
-  db.all(query, params, (err, rows) => err ? reject(err) : resolve(rows));
-});
+const dbAll = async (query, params) => {
+  const [rows] = await pool.execute(query, params);
+  return rows;
+};
+
+// Initialize Database Schema
+async function initDB() {
+  try {
+    // Create Users Table
+    await pool.query(`CREATE TABLE IF NOT EXISTS users (
+      id VARCHAR(255) PRIMARY KEY,
+      fullName VARCHAR(255) NOT NULL,
+      email VARCHAR(255) UNIQUE NOT NULL,
+      password VARCHAR(255) NOT NULL,
+      createdAt VARCHAR(255) NOT NULL
+    )`);
+
+    // Create Plants Table
+    await pool.query(`CREATE TABLE IF NOT EXISTS plants (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      type VARCHAR(255) NOT NULL,
+      price VARCHAR(255) NOT NULL,
+      location VARCHAR(255) NOT NULL,
+      image VARCHAR(255) NOT NULL,
+      space_tag VARCHAR(255) NOT NULL,
+      sunlight_need VARCHAR(50) NOT NULL,
+      min_temp INT DEFAULT 10,
+      max_temp INT DEFAULT 35,
+      purification_score INT DEFAULT 5,
+      is_sold TINYINT(1) DEFAULT 0,
+      buyer_id VARCHAR(255)
+    )`);
+
+    // Seed initial data if table is empty
+    const [rows] = await pool.query('SELECT COUNT(*) as count FROM plants');
+    if (rows[0].count === 0) {
+      console.log('Seeding initial plant data...');
+      const insertQuery = 'INSERT INTO plants (name, type, price, location, image, space_tag, sunlight_need, min_temp, max_temp, purification_score) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+      
+      for (const plant of MVP_PLANTS) {
+        await pool.execute(insertQuery, [
+          plant.name, 
+          plant.type, 
+          plant.price, 
+          plant.location, 
+          plant.image, 
+          plant.space_tag, 
+          plant.sunlight_need, 
+          plant.min_temp, 
+          plant.max_temp, 
+          plant.purification_score
+        ]);
+      }
+      console.log('MVP seed plants added to database.');
+    }
+    console.log('Connected to MySQL and schema verified.');
+  } catch (err) {
+    console.error('Database initialization error:', err.message);
+  }
+}
+
+initDB();
 
 // Helper for fetching weather data (Monthly Average)
 async function getMonthlyAverage(city) {
@@ -100,15 +111,11 @@ async function getMonthlyAverage(city) {
     const month = new Date().getMonth() + 1; // 1-12
     const currentYear = new Date().getFullYear();
     
-    // We fetch statistical averages for the current month
-    // Format: https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/[location]/[date1]/[date2]
-    // Using a sample date range for the current month
     const date1 = `${currentYear}-${month.toString().padStart(2, '0')}-01`;
     const date2 = `${currentYear}-${month.toString().padStart(2, '0')}-28`;
     
     console.log(`Fetching climatology for ${city} in month ${month}...`);
     
-    // For development, if no API key, return a reasonable default based on Nepal geography
     if (API_KEY === 'YOUR_VISUAL_CROSSING_KEY') {
       console.warn('No Visual Crossing API Key found. Using Nepal-specific fallbacks.');
       const nepalClimates = {
@@ -127,7 +134,6 @@ async function getMonthlyAverage(city) {
     const response = await fetch(url);
     const data = await response.json();
     
-    // Return the average temperature for the period
     return data.currentConditions?.temp || data.days[0]?.temp || 20;
   } catch (error) {
     console.error('Weather API Error:', error);
@@ -201,7 +207,6 @@ app.post('/api/login', async (req, res) => {
 
 // --- Marketplace Endpoints ---
 
-// Get all available plants
 app.get('/api/plants', async (req, res) => {
   try {
     const plants = await dbAll('SELECT * FROM plants WHERE is_sold = 0');
@@ -211,7 +216,6 @@ app.get('/api/plants', async (req, res) => {
   }
 });
 
-// Recommend plants based on space, sunlight, and temperature
 app.get('/api/recommend', async (req, res) => {
   try {
     const { space, sunlight, location } = req.query;
@@ -223,12 +227,10 @@ app.get('/api/recommend', async (req, res) => {
       params.push(`%${space}%`);
     }
     if (sunlight) {
-      // Inclusive matching: plants that need LESS than or equal to the available light
-      query += ' AND sunlight_need <= ?';
+      query += ' AND CAST(sunlight_need AS UNSIGNED) <= ?';
       params.push(sunlight);
     }
     
-    // If location is provided, fetch the real climatology data
     if (location) {
       const avgTemp = await getMonthlyAverage(location);
       console.log(`Climatology Match: ${location} Avg Temp = ${avgTemp}°C`);
@@ -244,7 +246,6 @@ app.get('/api/recommend', async (req, res) => {
   }
 });
 
-// Buy one or more plants
 app.post('/api/plants/:id/buy', async (req, res) => {
   try {
     const { id } = req.params;
@@ -253,20 +254,17 @@ app.post('/api/plants/:id/buy', async (req, res) => {
     const plant = await dbGet('SELECT * FROM plants WHERE id = ?', [id]);
     if (!plant) return res.status(404).json({ error: 'Plant not found' });
     
-    // In a multi-quantity scenario, the first plant is marked as sold to the user
     if (plant.is_sold && plant.buyer_id !== userId) {
       return res.status(400).json({ error: 'Plant already sold' });
     }
 
-    // Update the original plant record
     await dbRun('UPDATE plants SET is_sold = 1, buyer_id = ? WHERE id = ?', [userId, id]);
 
-    // If quantity > 1, create additional records for the user
     if (quantity > 1) {
-      const stmt = db.prepare('INSERT INTO plants (name, type, price, location, image, space_tag, sunlight_need, min_temp, max_temp, purification_score, is_sold, buyer_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)');
+      const insertQuery = 'INSERT INTO plants (name, type, price, location, image, space_tag, sunlight_need, min_temp, max_temp, purification_score, is_sold, buyer_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)';
       
       for (let i = 1; i < quantity; i++) {
-        stmt.run([
+        await pool.execute(insertQuery, [
           plant.name, 
           plant.type, 
           plant.price, 
@@ -280,7 +278,6 @@ app.post('/api/plants/:id/buy', async (req, res) => {
           userId
         ]);
       }
-      stmt.finalize();
     }
 
     res.json({ message: `Successfully purchased ${quantity} ${plant.name}(s)` });
@@ -290,7 +287,6 @@ app.post('/api/plants/:id/buy', async (req, res) => {
   }
 });
 
-// Get plants owned by a specific user
 app.get('/api/users/:userId/plants', async (req, res) => {
   try {
     const { userId } = req.params;

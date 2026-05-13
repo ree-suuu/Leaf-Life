@@ -1,22 +1,31 @@
-import sqlite3 from 'sqlite3';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import mysql from 'mysql2/promise';
+import dotenv from 'dotenv';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const DB_PATH = path.join(__dirname, 'database.db');
+dotenv.config();
 
-const db = new sqlite3.Database(DB_PATH);
-
-db.serialize(() => {
-  console.log('Dropping plants table to upgrade schema...');
-  db.run('DROP TABLE IF EXISTS plants', (err) => {
-    if (err) console.error('Error dropping table:', err.message);
-    else console.log('Plants table dropped successfully.');
+async function resetDB() {
+  const connection = await mysql.createConnection({
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.DB_NAME || 'plant_app'
   });
-});
 
-db.close((err) => {
-  if (err) console.error(err.message);
-  else console.log('Database connection closed. Now restart your server.');
-});
+  try {
+    console.log('Dropping plants table to upgrade schema...');
+    await connection.query('DROP TABLE IF EXISTS plants');
+    console.log('Plants table dropped successfully.');
+
+    console.log('Dropping users table...');
+    await connection.query('DROP TABLE IF EXISTS users');
+    console.log('Users table dropped successfully.');
+
+  } catch (err) {
+    console.error('Error resetting database:', err.message);
+  } finally {
+    await connection.end();
+    console.log('Database connection closed. Now restart your server.');
+  }
+}
+
+resetDB();
