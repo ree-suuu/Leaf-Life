@@ -50,7 +50,7 @@ export default function SmartRecommendation() {
     
     const lightMap = { '1': 'Low', '2': 'Medium', '3': 'High' };
     const sunlight = lightMap[lightLevel];
-    const spaceMap = { 'indoor': 'Indoor', 'rooftop': 'Rooftop', 'balcony': 'Balcony', 'garden': 'Rooftop' };
+    const spaceMap = { 'indoor': 'indoor', 'rooftop': 'rooftop', 'balcony': 'balcony', 'garden': 'garden' };
     const space = spaceMap[spaceType];
 
     try {

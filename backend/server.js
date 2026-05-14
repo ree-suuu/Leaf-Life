@@ -227,11 +227,10 @@ app.get('/api/recommend', async (req, res) => {
     let detectedTemp = null;
 
     if (space) {
-      query += ' AND space_tag LIKE ?';
-      params.push(`%${space}%`);
+      query += ' AND LOWER(space_tag) LIKE ?';
+      params.push(`%${space.toLowerCase()}%`);
     }
     if (sunlight) {
-      // Maps 'Low' -> 1, 'Medium' -> 2, 'High' -> 3
       const lightMap = { 'Low': 1, 'Medium': 2, 'High': 3 };
       const lightValue = lightMap[sunlight] || sunlight;
       query += ' AND CAST(sunlight_need AS UNSIGNED) <= ?';
@@ -240,12 +239,13 @@ app.get('/api/recommend', async (req, res) => {
     
     if (location) {
       detectedTemp = await getMonthlyAverage(location);
-      console.log(`Climatology Match: ${location} Avg Temp = ${detectedTemp}°C`);
+      console.log(`RECOMMENDATION DEBUG: Location=${location}, Temp=${detectedTemp}°C, Space=${space}, Light=${sunlight}`);
       query += ' AND ? BETWEEN min_temp AND max_temp';
       params.push(detectedTemp);
     }
 
     const plants = await dbAll(query, params);
+    console.log(`RECOMMENDATION DEBUG: Found ${plants.length} plants`);
     
     // Return a summary object as requested
     res.json({
