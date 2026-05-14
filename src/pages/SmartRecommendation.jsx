@@ -140,7 +140,7 @@ export default function SmartRecommendation() {
                 <input 
                   type="range" min="1" max="3" 
                   value={lightLevel} 
-                  onChange={(e) => setLevel(e.target.value)} 
+                  onChange={(e) => setLightLevel(e.target.value)} 
                   style={{ width: '100%', accentColor: 'var(--primary)', height: '8px', cursor: 'pointer' }}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>

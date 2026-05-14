@@ -222,38 +222,45 @@ app.get('/api/plants', async (req, res) => {
 app.get('/api/recommend', async (req, res) => {
   try {
     const { space, sunlight, location } = req.query;
-    let query = 'SELECT * FROM plants WHERE is_sold = 0';
+    let baseQuery = 'SELECT * FROM plants WHERE is_sold = 0';
     const params = [];
-    let detectedTemp = null;
+    let detectedTemp = 20; 
 
     if (space) {
-      query += ' AND LOWER(space_tag) LIKE ?';
+      baseQuery += ' AND LOWER(space_tag) LIKE ?';
       params.push(`%${space.toLowerCase()}%`);
     }
     if (sunlight) {
       const lightMap = { 'Low': 1, 'Medium': 2, 'High': 3 };
       const lightValue = lightMap[sunlight] || sunlight;
-      query += ' AND CAST(sunlight_need AS UNSIGNED) <= ?';
+      baseQuery += ' AND CAST(sunlight_need AS UNSIGNED) <= ?';
       params.push(lightValue);
     }
     
     if (location) {
       detectedTemp = await getMonthlyAverage(location);
-      console.log(`RECOMMENDATION DEBUG: Location=${location}, Temp=${detectedTemp}°C, Space=${space}, Light=${sunlight}`);
-      query += ' AND ? BETWEEN min_temp AND max_temp';
-      params.push(detectedTemp);
     }
 
-    const plants = await dbAll(query, params);
-    console.log(`RECOMMENDATION DEBUG: Found ${plants.length} plants`);
+    const tempQuery = baseQuery + ' AND ? BETWEEN min_temp AND max_temp';
+    const tempParams = [...params, detectedTemp];
     
-    // Return a summary object as requested
+    console.log(`RECOMMENDATION TRY: Location=${location}, Temp=${detectedTemp}°C, Space=${space}`);
+    let plants = await dbAll(tempQuery, tempParams);
+
+    let fallbackUsed = false;
+    if (plants.length === 0) {
+      console.log(`RECOMMENDATION FALLBACK USED`);
+      plants = await dbAll(baseQuery, params);
+      fallbackUsed = true;
+    }
+
     res.json({
       summary: {
         location: location || 'Not specified',
-        averageTemp: detectedTemp ? `${detectedTemp}°C` : 'N/A',
+        averageTemp: `${detectedTemp}°C`,
         space: space || 'Any',
-        sunlight: sunlight || 'Any'
+        sunlight: sunlight || 'Any',
+        note: fallbackUsed ? "Climate match restricted, showing general results." : null
       },
       plants: plants
     });
