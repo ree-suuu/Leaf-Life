@@ -56,7 +56,9 @@ export default function SmartRecommendation() {
     try {
       const response = await fetch(`/api/recommend?space=${space}&sunlight=${sunlight}&location=${location}`);
       const data = await response.json();
-      setRecommendedPlants(data);
+      // data now looks like: { summary: {...}, plants: [...] }
+      setRecommendedPlants(data.plants || []);
+      setSummaryData(data.summary || null);
       setShowResults(true);
     } catch (error) {
       console.error('RECOMMENDATION ERROR:', error);
@@ -65,6 +67,8 @@ export default function SmartRecommendation() {
       setLoading(false);
     }
   };
+
+  const [summaryData, setSummaryData] = useState(null);
 
   return (
     <div className="animate-fade-in" style={{ padding: '1.5rem', maxWidth: '800px', margin: '0 auto' }}>
@@ -136,7 +140,7 @@ export default function SmartRecommendation() {
                 <input 
                   type="range" min="1" max="3" 
                   value={lightLevel} 
-                  onChange={(e) => setLightLevel(e.target.value)} 
+                  onChange={(e) => setLevel(e.target.value)} 
                   style={{ width: '100%', accentColor: 'var(--primary)', height: '8px', cursor: 'pointer' }}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
@@ -158,8 +162,35 @@ export default function SmartRecommendation() {
         </div>
       ) : (
         <div className="results-view animate-fade-in">
+          {/* Summary Box */}
+          {summaryData && (
+            <div className="glass-panel" style={{ padding: '1.5rem', marginBottom: '2rem', border: '1px solid var(--primary)', background: 'var(--primary-light)', borderRadius: '1rem' }}>
+              <h3 style={{ fontSize: '1.125rem', fontWeight: '700', color: 'var(--primary)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Sparkles size={18} /> Your Environmental Summary
+              </h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '1.5rem' }}>
+                <div>
+                  <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-secondary)', fontWeight: '700' }}>Location</div>
+                  <div style={{ fontWeight: '600' }}>{summaryData.location}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-secondary)', fontWeight: '700' }}>Avg. Temperature</div>
+                  <div style={{ fontWeight: '600', color: 'var(--accent)' }}>{summaryData.averageTemp}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-secondary)', fontWeight: '700' }}>Space Type</div>
+                  <div style={{ fontWeight: '600' }}>{summaryData.space}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-secondary)', fontWeight: '700' }}>Light Level</div>
+                  <div style={{ fontWeight: '600' }}>{summaryData.sunlight}</div>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: '700' }}>Top Matches for You</h3>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: '700' }}>Recommended for You</h3>
             <button className="btn-secondary" onClick={() => setShowResults(false)} style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>
               Edit Details
             </button>
@@ -206,3 +237,4 @@ export default function SmartRecommendation() {
     </div>
   );
 }
+

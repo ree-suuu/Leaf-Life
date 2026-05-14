@@ -224,25 +224,39 @@ app.get('/api/recommend', async (req, res) => {
     const { space, sunlight, location } = req.query;
     let query = 'SELECT * FROM plants WHERE is_sold = 0';
     const params = [];
+    let detectedTemp = null;
 
     if (space) {
       query += ' AND space_tag LIKE ?';
       params.push(`%${space}%`);
     }
     if (sunlight) {
+      // Maps 'Low' -> 1, 'Medium' -> 2, 'High' -> 3
+      const lightMap = { 'Low': 1, 'Medium': 2, 'High': 3 };
+      const lightValue = lightMap[sunlight] || sunlight;
       query += ' AND CAST(sunlight_need AS UNSIGNED) <= ?';
-      params.push(sunlight);
+      params.push(lightValue);
     }
     
     if (location) {
-      const avgTemp = await getMonthlyAverage(location);
-      console.log(`Climatology Match: ${location} Avg Temp = ${avgTemp}°C`);
+      detectedTemp = await getMonthlyAverage(location);
+      console.log(`Climatology Match: ${location} Avg Temp = ${detectedTemp}°C`);
       query += ' AND ? BETWEEN min_temp AND max_temp';
-      params.push(avgTemp);
+      params.push(detectedTemp);
     }
 
     const plants = await dbAll(query, params);
-    res.json(plants);
+    
+    // Return a summary object as requested
+    res.json({
+      summary: {
+        location: location || 'Not specified',
+        averageTemp: detectedTemp ? `${detectedTemp}°C` : 'N/A',
+        space: space || 'Any',
+        sunlight: sunlight || 'Any'
+      },
+      plants: plants
+    });
   } catch (error) {
     console.error('Recommendation Error:', error);
     res.status(500).json({ error: 'Recommendation failed' });
