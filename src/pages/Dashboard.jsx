@@ -94,7 +94,9 @@ export default function Dashboard() {
       <div className="glass-panel air-quality-panel">
         <div className="aq-header">
           <h3>Air Purification Impact</h3>
-          <span className="aq-status">{airQualityImprovement > 50 ? 'Excellent' : airQualityImprovement > 20 ? 'Good' : 'Improving'}</span>
+          <span className="aq-status">
+            {airQualityImprovement === 0 ? 'No Impact' : airQualityImprovement > 50 ? 'Excellent' : airQualityImprovement > 20 ? 'Good' : 'Improving'}
+          </span>
         </div>
         <p className="text-subtle">
           {ownedPlants.length > 0 
@@ -102,14 +104,14 @@ export default function Dashboard() {
             : "You haven't added any plants yet. Start your journey to cleaner air!"}
         </p>
         <div className="progress-bar">
-          <div className="progress-fill" style={{ width: `${Math.max(airQualityImprovement, 5)}%` }}></div>
+          <div className="progress-fill" style={{ width: `${airQualityImprovement}%` }}></div>
         </div>
       </div>
 
       {/* Collection */}
       <div className="collection-header">
         <h3 className="section-title">Your Collection</h3>
-        <button className="btn-text" onClick={() => navigate('/recommend')}>Find New Plant</button>
+        <button className="btn-text" onClick={() => navigate('/marketplace')}>Find New Plant</button>
       </div>
 
       <div className="collection-grid">
@@ -130,13 +132,13 @@ export default function Dashboard() {
         ) : (
           <div className="glass-panel" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '3rem', border: '1px dashed var(--border-color)' }}>
             <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>No plants in your collection yet.</p>
-            <button className="btn-primary" onClick={() => navigate('/recommend')}>Get Your First Plant</button>
+            <button className="btn-primary" onClick={() => navigate('/marketplace')}>Get Your First Plant</button>
           </div>
         )}
         
         {/* Add New Card - only show if there are already plants, or keep as a constant CTA */}
         {ownedPlants.length > 0 && (
-          <div className="collection-card add-card" onClick={() => navigate('/recommend')}>
+          <div className="collection-card add-card" onClick={() => navigate('/marketplace')}>
             <div className="add-icon">
               <Plus size={32} />
             </div>
