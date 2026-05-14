@@ -1,62 +1,122 @@
 export const MVP_PLANTS = [
   {
-    name: 'ZZ Plant',
+    name: 'Aloe Vera',
     type: 'buy',
-    price: 'Rs. 20',
+    price: 'Rs. 15',
     location: 'Local Nursery',
-    image: '/plant_images/ZZ.jpg',
-    space_tag: 'indoor,balcony', 
-    sunlight_need: '1', 
+    image: '/plant_images/aloe_vera.jpg',
+    space_tag: 'balcony,garden,rooftop',
+    sunlight_need: '3',
+    min_temp: 10,
+    max_temp: 40,
+    purification_score: 7
+  },
+  {
+    name: 'Areca Palm',
+    type: 'buy',
+    price: 'Rs. 85',
+    location: 'Green Garden',
+    image: '/plant_images/areca_palm.jpg',
+    space_tag: 'indoor,balcony',
+    sunlight_need: '2',
     min_temp: 15,
-    max_temp: 32,
-    purification_score: 10
-  },
-  {
-    name: 'Snake Plant',
-    type: 'buy',
-    price: 'Rs. 12',
-    location: 'Local Nursery',
-    image: '/plant_images/snakeplant.jpg',
-    space_tag: 'indoor,balcony,rooftop,garden', // The Universal Plant
-    sunlight_need: '1', // Level 1 covers 1, 2, and 3
-    min_temp: 5, // Extra hardy for Nepal winters
-    max_temp: 38,
-    purification_score: 10
-  },
-  {
-    name: 'Peace Lily',
-    type: 'buy',
-    price: 'Rs. 10',
-    location: 'Local Nursery',
-    image: '/plant_images/peacelily.jpg',
-    space_tag: 'indoor,balcony', // Can be in balcony if shaded
-    sunlight_need: '2', // Needs at least Medium
-    min_temp: 18,
     max_temp: 30,
+    purification_score: 9
+  },
+  {
+    name: 'Chinese Money Plant',
+    type: 'buy',
+    price: 'Rs. 45',
+    location: 'Plant Hub',
+    image: '/plant_images/chinese_money_plant.jpg',
+    space_tag: 'indoor',
+    sunlight_need: '2',
+    min_temp: 13,
+    max_temp: 30,
+    purification_score: 6
+  },
+  {
+    name: 'English Ivy',
+    type: 'buy',
+    price: 'Rs. 25',
+    location: 'Local Nursery',
+    image: '/plant_images/english_ivy.jpg',
+    space_tag: 'indoor,balcony',
+    sunlight_need: '2',
+    min_temp: 5,
+    max_temp: 25,
     purification_score: 10
   },
   {
     name: 'Jade Plant',
     type: 'buy',
-    price: 'Rs. 20',
+    price: 'Rs. 30',
     location: 'Local Nursery',
-    image: '/plant_images/jadeplant.jpg',
-    space_tag: 'indoor,balcony,rooftop,garden', // High light indoor or any outdoor
-    sunlight_need: '3', // Needs High light
+    image: '/plant_images/jade_plant.jpg',
+    space_tag: 'indoor,balcony',
+    sunlight_need: '3',
     min_temp: 10,
     max_temp: 35,
     purification_score: 6
   },
   {
-    name: 'Aloe Vera',
+    name: 'Monstera Deliciosa',
     type: 'buy',
-    price: 'Rs. 5',
+    price: 'Rs. 95',
+    location: 'Urban Jungle',
+    image: '/plant_images/monstera.jpg',
+    space_tag: 'indoor,balcony',
+    sunlight_need: '2',
+    min_temp: 18,
+    max_temp: 30,
+    purification_score: 8
+  },
+  {
+    name: 'Peace Lily',
+    type: 'buy',
+    price: 'Rs. 55',
     location: 'Local Nursery',
-    image: 'https://images.unsplash.com/photo-1596547609652-9cf5d8d76921?auto=format&fit=crop&q=80&w=400',
-    space_tag: 'balcony,rooftop,garden',
-    sunlight_need: '3',
-    min_temp: 10,
-    max_temp: 40,
-    purification_score: 7
+    image: '/plant_images/peace_lily.jpg',
+    space_tag: 'indoor',
+    sunlight_need: '1',
+    min_temp: 18,
+    max_temp: 30,
+    purification_score: 10
+  },
+  {
+    name: 'Pothos',
+    type: 'buy',
+    price: 'Rs. 20',
+    location: 'Greenery',
+    image: '/plant_images/pothos.jpg',
+    space_tag: 'indoor,balcony',
+    sunlight_need: '1',
+    min_temp: 15,
+    max_temp: 32,
+    purification_score: 9
+  },
+  {
+    name: 'Rubber Plant',
+    type: 'buy',
+    price: 'Rs. 65',
+    location: 'Plant Boutique',
+    image: '/plant_images/rubber_plant.jpg',
+    space_tag: 'indoor',
+    sunlight_need: '2',
+    min_temp: 15,
+    max_temp: 28,
+    purification_score: 8
+  },
+  {
+    name: 'Snake Plant',
+    type: 'buy',
+    price: 'Rs. 40',
+    location: 'Local Nursery',
+    image: '/plant_images/snake_plant.jpg',
+    space_tag: 'indoor,balcony,garden',
+    sunlight_need: '1',
+    min_temp: 5,
+    max_temp: 38,
+    purification_score: 10
   }
 ];

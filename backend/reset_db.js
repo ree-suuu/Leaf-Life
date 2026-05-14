@@ -1,7 +1,13 @@
 import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Explicitly load .env from the backend directory
+dotenv.config({ path: path.join(__dirname, '.env') });
 
 async function resetDB() {
   const connection = await mysql.createConnection({
