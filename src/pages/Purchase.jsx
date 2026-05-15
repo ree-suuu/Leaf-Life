@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MapPin, CheckCircle, ShieldCheck, ShoppingCart, Lock, X, Minus, Plus } from 'lucide-react';
+import { ArrowLeft, MapPin, CheckCircle, ShieldCheck, ShoppingCart, X, Minus, Plus, QrCode } from 'lucide-react';
 
 export default function Purchase() {
   const { id } = useParams();
@@ -14,11 +14,9 @@ export default function Purchase() {
   const [showQuantitySelector, setShowQuantitySelector] = useState(false);
   const [quantity, setQuantity] = useState(1);
 
-  // Password Verification State
-  const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
-  const [password, setPassword] = useState('');
-  const [verifying, setVerifying] = useState(false);
-  const [error, setError] = useState('');
+  // QR Payment State
+  const [showQRPrompt, setShowQRPrompt] = useState(false);
+  const [paymentProcessing, setPaymentProcessing] = useState(false);
 
   useEffect(() => {
     const fetchPlant = async () => {
@@ -40,57 +38,40 @@ export default function Purchase() {
     setShowQuantitySelector(true);
   };
 
-  const handleProceedToVerify = () => {
-    setShowQuantitySelector(false);
-    setShowPasswordPrompt(true);
-    setError('');
-  };
-
-  const handleVerifyAndBuy = async (e) => {
-    e.preventDefault();
-    setVerifying(true);
-    setError('');
-
+  const handleProceedToPayment = () => {
     const user = JSON.parse(localStorage.getItem('user'));
-    if (!user || !user.email) {
-      setError('User session not found. Please log in again.');
-      setVerifying(false);
+    if (!user) {
+      alert('Please log in to purchase.');
       return;
     }
+    setShowQuantitySelector(false);
+    setShowQRPrompt(true);
+  };
 
+  const handlePaymentComplete = async () => {
+    setPaymentProcessing(true);
+    const user = JSON.parse(localStorage.getItem('user'));
+    
     try {
-      const response = await fetch('/api/verify-password', {
+      // Simulate bank server detection delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      const buyResponse = await fetch(`/api/plants/${id}/buy`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: user.email, password })
+        body: JSON.stringify({ userId: user.id, quantity })
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        setShowPasswordPrompt(false);
-        setPurchasing(true);
-        
-        // Finalize purchase with quantity
-        const buyResponse = await fetch(`/api/plants/${id}/buy`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: user.id, quantity })
-        });
-
-        if (buyResponse.ok) {
-          setSuccess(true);
-        } else {
-          setError('Purchase failed. Please try again.');
-        }
-        setPurchasing(false);
+      if (buyResponse.ok) {
+        setShowQRPrompt(false);
+        setSuccess(true);
       } else {
-        setError(data.error || 'Verification failed');
+        alert('Payment verification failed. Please try again.');
       }
     } catch (err) {
-      setError('Connection error. Please try again.');
+      console.error("Payment error:", err);
     } finally {
-      setVerifying(false);
+      setPaymentProcessing(false);
     }
   };
 
@@ -118,7 +99,7 @@ export default function Purchase() {
           <button onClick={() => navigate('/dashboard')} className="btn-primary" style={{ width: '100%', maxWidth: '300px' }}>Go to Dashboard</button>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'window.innerWidth > 600 ? "1fr 1fr" : "1fr"', gap: '2rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
           <div style={{ borderRadius: '1.5rem', overflow: 'hidden', height: '350px', backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <img src={plant.image} alt={plant.name} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '1rem' }} />
           </div>
@@ -158,7 +139,7 @@ export default function Purchase() {
 
             <button 
               onClick={handleBuyClick} 
-              disabled={purchasing || showPasswordPrompt || showQuantitySelector}
+              disabled={purchasing || showQuantitySelector || showQRPrompt}
               className="btn-primary" 
               style={{ width: '100%', padding: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', fontSize: '1rem' }}
             >
@@ -206,86 +187,65 @@ export default function Purchase() {
               </button>
             </div>
 
-            <button onClick={handleProceedToVerify} className="btn-primary" style={{ width: '100%', padding: '0.75rem' }}>
-              Confirm & Proceed
+            <button onClick={handleProceedToPayment} className="btn-primary" style={{ width: '100%', padding: '0.75rem' }}>
+              Confirm & Proceed to Payment
             </button>
           </div>
         </div>
       )}
 
-      {/* Password Prompt Modal */}
-      {showPasswordPrompt && (
+      {/* QR Code Payment Modal */}
+      {showQRPrompt && (
         <div style={{ 
-          position: 'fixed', 
-          top: 0, left: 0, right: 0, bottom: 0, 
-          backgroundColor: 'rgba(0,0,0,0.5)', 
-          backdropFilter: 'blur(4px)',
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'center', 
-          zIndex: 1000,
-          padding: '1rem'
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
+          backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem'
         }}>
           <div className="glass-panel animate-scale-up" style={{ 
-            backgroundColor: 'var(--bg-surface)', 
-            padding: '2rem', 
-            borderRadius: '1.5rem', 
-            width: '100%', 
-            maxWidth: '400px',
-            boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)',
-            position: 'relative'
+            backgroundColor: 'var(--bg-surface)', padding: '2rem', borderRadius: '1.5rem', 
+            width: '100%', maxWidth: '400px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)', position: 'relative',
+            textAlign: 'center'
           }}>
-            <button 
-              onClick={() => setShowPasswordPrompt(false)}
-              style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}
-            >
-              <X size={20} />
-            </button>
-
-            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-              <div style={{ width: '48px', height: '48px', backgroundColor: 'var(--bg-secondary)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
-                <Lock size={24} color="var(--primary)" />
-              </div>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: '700' }}>Confirm Purchase</h2>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>enter ur password</p>
-              <p style={{ marginTop: '0.5rem', fontWeight: '600' }}>Total: {quantity} × {plant.name}</p>
+            <button onClick={() => setShowQRPrompt(false)} style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}><X size={20} /></button>
+            
+            <div style={{ width: '48px', height: '48px', backgroundColor: 'var(--bg-secondary)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
+              <QrCode size={24} color="var(--primary)" />
+            </div>
+            
+            <h2 style={{ fontSize: '1.25rem', fontWeight: '700', marginBottom: '0.5rem' }}>Scan to Pay</h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '1.5rem' }}>Scan the QR code with your bank app to complete the purchase of {quantity} {plant.name}(s).</p>
+            
+            <div style={{ 
+              backgroundColor: 'white', padding: '1rem', borderRadius: '1rem', display: 'inline-block', marginBottom: '1.5rem',
+              border: '4px solid var(--primary-light)'
+            }}>
+              <img 
+                src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=PlantApp-Payment-Simulation" 
+                alt="Payment QR Code" 
+                style={{ width: '200px', height: '200px' }}
+              />
             </div>
 
-            <form onSubmit={handleVerifyAndBuy}>
-              <div style={{ marginBottom: '1.5rem' }}>
-                <input 
-                  type="password" 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
-                  autoFocus
-                  required
-                  style={{ 
-                    width: '100%', 
-                    padding: '0.75rem 1rem', 
-                    borderRadius: '0.75rem', 
-                    border: '1px solid var(--border-color)',
-                    backgroundColor: 'var(--bg-secondary)',
-                    color: 'var(--text-primary)',
-                    fontSize: '1rem'
-                  }}
-                />
-                {error && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.5rem' }}>{error}</p>}
-              </div>
+            <div style={{ marginBottom: '1.5rem' }}>
+              <p style={{ fontWeight: '700', fontSize: '1.125rem', color: 'var(--primary)' }}>
+                Total Amount: Rs. {parseInt(plant.price.replace('Rs. ', '')) * quantity}
+              </p>
+            </div>
 
-              <button 
-                type="submit" 
-                disabled={verifying}
-                className="btn-primary" 
-                style={{ width: '100%', padding: '0.75rem' }}
-              >
-                {verifying ? 'Verifying...' : 'Verify & Buy'}
-              </button>
-            </form>
+            <button 
+              onClick={handlePaymentComplete} 
+              disabled={paymentProcessing}
+              className="btn-primary" 
+              style={{ width: '100%', padding: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+            >
+              {paymentProcessing ? 'Detecting Payment...' : 'I\'ve Scanned & Paid'}
+            </button>
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '1rem' }}>
+              Waiting for bank server confirmation...
+            </p>
           </div>
         </div>
       )}
     </div>
   );
 }
-

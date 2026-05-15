@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Filter, Heart, MapPin, ShoppingCart, X, Minus, Plus, Lock, CheckCircle } from 'lucide-react';
+import { Search, Filter, Heart, MapPin, ShoppingCart, X, Minus, Plus, QrCode, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import './Marketplace.css';
 
@@ -14,10 +14,8 @@ export default function Marketplace() {
   const [selectedPlant, setSelectedPlant] = useState(null);
   const [showQuantitySelector, setShowQuantitySelector] = useState(false);
   const [quantity, setQuantity] = useState(1);
-  const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
-  const [password, setPassword] = useState('');
-  const [verifying, setVerifying] = useState(false);
-  const [purchasing, setPurchasing] = useState(false);
+  const [showQRPrompt, setShowQRPrompt] = useState(false);
+  const [paymentProcessing, setPaymentProcessing] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
 
@@ -42,75 +40,60 @@ export default function Marketplace() {
     return true;
   });
 
-  const handleBuyClick = (plant) => {
+  const handleBuyClick = (e, plant) => {
+    e.stopPropagation(); // Prevent navigation to detail page
     setSelectedPlant(plant);
     setQuantity(1);
     setShowQuantitySelector(true);
     setError('');
   };
 
-  const handleProceedToVerify = () => {
-    setShowQuantitySelector(false);
-    setShowPasswordPrompt(true);
-    setPassword('');
-    setError('');
-  };
-
-  const handleVerifyAndBuy = async (e) => {
-    e.preventDefault();
-    setVerifying(true);
-    setError('');
-
+  const handleProceedToPayment = () => {
     const userStr = localStorage.getItem('user');
     if (!userStr) {
       setError('Please log in to purchase.');
-      setVerifying(false);
+      alert('Please log in to purchase.');
       return;
     }
-    const user = JSON.parse(userStr);
+    setShowQuantitySelector(false);
+    setShowQRPrompt(true);
+  };
 
+  const handlePaymentComplete = async () => {
+    setPaymentProcessing(true);
+    const userStr = localStorage.getItem('user');
+    const user = JSON.parse(userStr);
+    
     try {
-      const response = await fetch('/api/verify-password', {
+      // Simulate bank server detection delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      const buyResponse = await fetch(`/api/plants/${selectedPlant.id}/buy`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: user.email, password })
+        body: JSON.stringify({ userId: user.id, quantity })
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        setShowPasswordPrompt(false);
-        setPurchasing(true);
-        
-        const buyResponse = await fetch(`/api/plants/${selectedPlant.id}/buy`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: user.id, quantity })
-        });
-
-        if (buyResponse.ok) {
-          setSuccess(true);
-          // Refresh plants list
-          const refreshRes = await fetch('/api/plants');
-          const newData = await refreshRes.json();
-          setPlants(newData);
-        } else {
-          setError('Purchase failed. Please try again.');
-        }
-        setPurchasing(false);
+      if (buyResponse.ok) {
+        setShowQRPrompt(false);
+        setSuccess(true);
+        // Refresh plants list
+        const refreshRes = await fetch('/api/plants');
+        const newData = await refreshRes.json();
+        setPlants(newData);
       } else {
-        setError(data.error || 'Incorrect password');
+        alert('Payment verification failed. Please try again.');
       }
     } catch (err) {
-      setError('Connection error. Please try again.');
+      console.error("Payment error:", err);
     } finally {
-      setVerifying(false);
+      setPaymentProcessing(false);
     }
   };
 
   const closeModals = () => {
     setShowQuantitySelector(false);
-    setShowPasswordPrompt(false);
+    setShowQRPrompt(false);
     setSuccess(false);
     setSelectedPlant(null);
   };
@@ -127,7 +110,7 @@ export default function Marketplace() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-          <button className="btn-icon"><Filter size={20} /></button>
+          <button className="btn-icon" type="button"><Filter size={20} /></button>
         </div>
       </div>
 
@@ -137,6 +120,7 @@ export default function Marketplace() {
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={`tab-button ${activeTab === tab ? 'active' : ''}`}
+            type="button"
           >
             {tab}
           </button>
@@ -147,8 +131,8 @@ export default function Marketplace() {
         {loading ? (
           <p>Loading plants...</p>
         ) : filteredPlants.map((plant) => (
-          <div key={plant.id} className="plant-card">
-            <div className="plant-image" onClick={() => navigate(`/purchase/${plant.id}`)}>
+          <div key={plant.id} className="plant-card" onClick={() => navigate(`/purchase/${plant.id}`)}>
+            <div className="plant-image">
               <img 
                 src={plant.image} 
                 alt={plant.name} 
@@ -158,10 +142,10 @@ export default function Marketplace() {
                 }}
               />
               <div className="badge">{plant.type}</div>
-              <button className="like-btn" onClick={(e) => e.stopPropagation()}><Heart size={18} /></button>
+              <button className="like-btn" type="button" onClick={(e) => e.stopPropagation()}><Heart size={18} /></button>
             </div>
             <div className="plant-details">
-              <div onClick={() => navigate(`/purchase/${plant.id}`)} style={{ cursor: 'pointer' }}>
+              <div>
                 <h3>{plant.name}</h3>
                 <p className="price">{plant.price}</p>
                 <div className="location">
@@ -170,9 +154,10 @@ export default function Marketplace() {
                 </div>
               </div>
               <button 
+                type="button"
                 className="btn-primary buy-btn" 
                 style={{ width: '100%', marginTop: '0.75rem', padding: '0.5rem', fontSize: '0.875rem' }}
-                onClick={() => handleBuyClick(plant)}
+                onClick={(e) => handleBuyClick(e, plant)}
               >
                 <ShoppingCart size={16} /> Buy Now
               </button>
@@ -189,70 +174,67 @@ export default function Marketplace() {
 
       {/* Quantity Selector Modal */}
       {showQuantitySelector && (
-        <div className="modal-overlay">
-          <div className="glass-panel modal-content animate-scale-up">
-            <button className="close-modal" onClick={closeModals}><X size={20} /></button>
+        <div className="modal-overlay" onClick={closeModals}>
+          <div className="glass-panel modal-content animate-scale-up" onClick={(e) => e.stopPropagation()}>
+            <button className="close-modal" type="button" onClick={closeModals}><X size={20} /></button>
             <div className="modal-header">
               <h3>Select Quantity</h3>
               <p>How many {selectedPlant?.name}s do you want?</p>
             </div>
             
             <div className="quantity-controls">
-              <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="qty-btn"><Minus size={20} /></button>
+              <button type="button" onClick={() => setQuantity(Math.max(1, quantity - 1))} className="qty-btn"><Minus size={20} /></button>
               <span className="qty-value">{quantity}</span>
-              <button onClick={() => setQuantity(Math.min(10, quantity + 1))} className="qty-btn"><Plus size={20} /></button>
+              <button type="button" onClick={() => setQuantity(Math.min(10, quantity + 1))} className="qty-btn"><Plus size={20} /></button>
             </div>
 
-            <button onClick={handleProceedToVerify} className="btn-primary w-full">
-              Confirm & Proceed
+            <button type="button" onClick={handleProceedToPayment} className="btn-primary w-full">
+              Confirm & Proceed to Payment
             </button>
           </div>
         </div>
       )}
 
-      {/* Password Prompt Modal */}
-      {showPasswordPrompt && (
-        <div className="modal-overlay">
-          <div className="glass-panel modal-content animate-scale-up">
-            <button className="close-modal" onClick={closeModals}><X size={20} /></button>
+      {/* QR Code Payment Modal */}
+      {showQRPrompt && (
+        <div className="modal-overlay" onClick={closeModals}>
+          <div className="glass-panel modal-content animate-scale-up text-center" onClick={(e) => e.stopPropagation()}>
+            <button className="close-modal" type="button" onClick={closeModals}><X size={20} /></button>
             <div className="modal-header">
-              <div className="lock-icon"><Lock size={24} /></div>
-              <h3>Confirm Purchase</h3>
-              <p>Enter your password to verify</p>
-              <p className="purchase-summary">{quantity} × {selectedPlant?.name}</p>
+              <div className="qr-icon" style={{ marginBottom: '1rem', color: 'var(--primary)', display: 'flex', justifyContent: 'center' }}><QrCode size={48} /></div>
+              <h3>Scan to Pay</h3>
+              <p>Scan the QR code with your bank app</p>
+              <p className="purchase-summary" style={{ fontWeight: '700', color: 'var(--primary)', fontSize: '1.25rem' }}>
+                Total: Rs. {parseInt(selectedPlant?.price.replace('Rs. ', '')) * quantity}
+              </p>
             </div>
 
-            <form onSubmit={handleVerifyAndBuy}>
-              <div className="form-group">
-                <input 
-                  type="password" 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Password"
-                  autoFocus
-                  required
-                  className="modal-input"
-                />
-                {error && <p className="error-text">{error}</p>}
-              </div>
-              <button type="submit" disabled={verifying} className="btn-primary w-full">
-                {verifying ? 'Verifying...' : 'Verify & Buy'}
-              </button>
-            </form>
+            <div style={{ backgroundColor: 'white', padding: '1rem', borderRadius: '1rem', display: 'inline-block', margin: '1rem 0' }}>
+              <img 
+                src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=PlantApp-Payment-Simulation" 
+                alt="Payment QR Code" 
+                style={{ width: '200px', height: '200px' }}
+              />
+            </div>
+
+            <button type="button" onClick={handlePaymentComplete} disabled={paymentProcessing} className="btn-primary w-full" style={{ marginTop: '1rem' }}>
+              {paymentProcessing ? 'Detecting Payment...' : 'I\'ve Scanned & Paid'}
+            </button>
+            <p className="text-subtle" style={{ fontSize: '0.75rem', marginTop: '0.75rem' }}>Waiting for bank server confirmation...</p>
           </div>
         </div>
       )}
 
       {/* Success Modal */}
       {success && (
-        <div className="modal-overlay">
-          <div className="glass-panel modal-content animate-scale-up text-center">
+        <div className="modal-overlay" onClick={closeModals}>
+          <div className="glass-panel modal-content animate-scale-up text-center" onClick={(e) => e.stopPropagation()}>
             <div className="success-icon"><CheckCircle size={48} /></div>
             <h3>Purchase Successful!</h3>
             <p>You bought {quantity} {selectedPlant?.name}(s).</p>
             <div className="modal-actions">
-              <button onClick={() => navigate('/dashboard')} className="btn-primary w-full">Go to Dashboard</button>
-              <button onClick={closeModals} className="btn-text w-full">Continue Shopping</button>
+              <button type="button" onClick={() => navigate('/dashboard')} className="btn-primary w-full">Go to Dashboard</button>
+              <button type="button" onClick={closeModals} className="btn-text w-full">Continue Shopping</button>
             </div>
           </div>
         </div>
