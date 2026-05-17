@@ -292,6 +292,16 @@ app.post('/api/plants/:id/buy', async (req, res) => {
   }
 });
 
+app.get('/api/users/:userId/plants', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const plants = await dbAll('SELECT * FROM plants WHERE buyer_id = ?', [userId]);
+    res.json(plants);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch owned plants' });
+  }
+});
+
 // --- Payment Endpoints ---
 
 app.post('/api/payment/initiate', async (req, res) => {
