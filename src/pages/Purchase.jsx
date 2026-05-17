@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MapPin, CheckCircle, ShieldCheck, ShoppingCart, X, Minus, Plus, QrCode, Loader2 } from 'lucide-react';
+import { ArrowLeft, MapPin, CheckCircle, ShieldCheck, ShoppingCart, X, Minus, Plus, QrCode, Loader2, Droplets, Sun, Sprout, Info } from 'lucide-react';
+import careTipsData from '../data/careTips.json';
 
 export default function Purchase() {
   const { id } = useParams();
@@ -9,7 +10,7 @@ export default function Purchase() {
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState(false);
   const [success, setSuccess] = useState(false);
-  
+
   // Quantity State
   const [showQuantitySelector, setShowQuantitySelector] = useState(false);
   const [quantity, setQuantity] = useState(1);
@@ -87,7 +88,7 @@ export default function Purchase() {
   const handleFinalizePurchase = async () => {
     setPurchasing(true);
     const user = JSON.parse(localStorage.getItem('user'));
-    
+
     try {
       const buyResponse = await fetch(`/api/plants/${id}/buy`, {
         method: 'POST',
@@ -108,6 +109,13 @@ export default function Purchase() {
 
   if (loading) return <div style={{ padding: '2rem', textAlign: 'center' }}>Loading plant details...</div>;
   if (!plant) return <div style={{ padding: '2rem', textAlign: 'center' }}>Plant not found.</div>;
+
+  const careTips = careTipsData[plant.name] || {
+    watering: "General watering (once a week).",
+    sunlight: "General indirect light.",
+    soil: "Standard potting mix.",
+    tips: "Keep away from extreme temperatures."
+  };
 
   // Determine local IP for mobile access
   const localIP = "192.168.23.42"; // Updated current IP
@@ -134,59 +142,110 @@ export default function Purchase() {
           <button onClick={() => navigate('/dashboard')} className="btn-primary" style={{ width: '100%', maxWidth: '300px' }}>Go to Dashboard</button>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-          <div style={{ borderRadius: '1.5rem', overflow: 'hidden', height: '350px', backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <img src={plant.image} alt={plant.name} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '1rem' }} />
+        <>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2rem' }}>
+            <div style={{ borderRadius: '1.5rem', overflow: 'hidden', height: '350px', backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <img src={plant.image} alt={plant.name} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '1rem' }} />
+            </div>
+
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                <h1 style={{ fontSize: '1.75rem', fontWeight: '700', margin: 0 }}>{plant.name}</h1>
+                <span style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--primary)' }}>{plant.price}</span>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '1.5rem' }}>
+                <MapPin size={16} /> {plant.location}
+              </div>
+
+              <div className="glass-panel" style={{ padding: '1rem', backgroundColor: 'var(--bg-secondary)', borderRadius: '1rem', marginBottom: '1.5rem' }}>
+                <h3 style={{ fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.75rem', color: 'var(--text-primary)' }}>General Info</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div>
+                    <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Type</span>
+                    <span style={{ fontSize: '0.875rem', fontWeight: '500' }}>{plant.type}</span>
+                  </div>
+                  <div>
+                    <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Space</span>
+                    <span style={{ fontSize: '0.875rem', fontWeight: '500' }}>{plant.space_tag}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '2rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+                  <ShieldCheck size={16} color="#10b981" /> Verified Health Guarantee
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                  <ShieldCheck size={16} color="#10b981" /> Direct from Local Nursery
+                </div>
+              </div>
+
+              <button 
+                onClick={handleBuyClick} 
+                disabled={purchasing || showQuantitySelector || showQRPrompt}
+                className="btn-primary" 
+                style={{ width: '100%', padding: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', fontSize: '1rem' }}
+              >
+                {purchasing ? 'Processing...' : (
+                  <>
+                    <ShoppingCart size={20} />
+                    Buy Now
+                  </>
+                )}
+              </button>
+            </div>
           </div>
 
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
-              <h1 style={{ fontSize: '1.75rem', fontWeight: '700', margin: 0 }}>{plant.name}</h1>
-              <span style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--primary)' }}>{plant.price}</span>
-            </div>
-            
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '1.5rem' }}>
-              <MapPin size={16} /> {plant.location}
-            </div>
+          {/* Specialized Care Guide */}
+          <div className="glass-panel" style={{ padding: '2rem', backgroundColor: 'var(--bg-surface)', borderRadius: '1.5rem', border: '1px solid var(--border-color)', marginBottom: '2rem' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: '700', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <Sprout color="var(--primary)" size={24} /> Specialized Care Guide
+            </h2>
 
-            <div className="glass-panel" style={{ padding: '1rem', backgroundColor: 'var(--bg-secondary)', borderRadius: '1rem', marginBottom: '1.5rem' }}>
-              <h3 style={{ fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.75rem', color: 'var(--text-primary)' }}>Care Requirements</h3>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div>
-                  <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Light</span>
-                  <span style={{ fontSize: '0.875rem', fontWeight: '500' }}>{plant.sunlight_need === '1' ? 'Low' : plant.sunlight_need === '2' ? 'Medium' : 'High'}</span>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <div style={{ width: '40px', height: '40px', backgroundColor: 'var(--bg-secondary)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Droplets size={20} color="#3b82f6" />
                 </div>
                 <div>
-                  <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Space</span>
-                  <span style={{ fontSize: '0.875rem', fontWeight: '500' }}>{plant.space_tag}</span>
+                  <h4 style={{ fontSize: '0.875rem', fontWeight: '700', marginBottom: '0.25rem' }}>Watering</h4>
+                  <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', lineHeight: '1.4' }}>{careTips.watering}</p>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <div style={{ width: '40px', height: '40px', backgroundColor: 'var(--bg-secondary)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Sun size={20} color="#f59e0b" />
+                </div>
+                <div>
+                  <h4 style={{ fontSize: '0.875rem', fontWeight: '700', marginBottom: '0.25rem' }}>Sunlight</h4>
+                  <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', lineHeight: '1.4' }}>{careTips.sunlight}</p>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <div style={{ width: '40px', height: '40px', backgroundColor: 'var(--bg-secondary)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Sprout size={20} color="#10b981" />
+                </div>
+                <div>
+                  <h4 style={{ fontSize: '0.875rem', fontWeight: '700', marginBottom: '0.25rem' }}>Soil</h4>
+                  <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', lineHeight: '1.4' }}>{careTips.soil}</p>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <div style={{ width: '40px', height: '40px', backgroundColor: 'var(--bg-secondary)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Info size={20} color="var(--primary)" />
+                </div>
+                <div>
+                  <h4 style={{ fontSize: '0.875rem', fontWeight: '700', marginBottom: '0.25rem' }}>Expert Tip</h4>
+                  <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', lineHeight: '1.4' }}>{careTips.tips}</p>
                 </div>
               </div>
             </div>
-
-            <div style={{ marginBottom: '2rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-                <ShieldCheck size={16} color="#10b981" /> Verified Health Guarantee
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-                <ShieldCheck size={16} color="#10b981" /> Direct from Local Nursery
-              </div>
-            </div>
-
-            <button 
-              onClick={handleBuyClick} 
-              disabled={purchasing || showQuantitySelector || showQRPrompt}
-              className="btn-primary" 
-              style={{ width: '100%', padding: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', fontSize: '1rem' }}
-            >
-              {purchasing ? 'Processing...' : (
-                <>
-                  <ShoppingCart size={20} />
-                  Buy Now
-                </>
-              )}
-            </button>
           </div>
-        </div>
+        </>
       )}
 
       {/* Quantity Selector Modal */}

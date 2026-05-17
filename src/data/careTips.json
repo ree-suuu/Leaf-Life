@@ -1,0 +1,284 @@
+{
+  "Aloe Vera": {
+    "watering": "Water deeply but infrequently. Allow soil to dry completely between waterings.",
+    "sunlight": "Bright, direct sunlight (6+ hours per day).",
+    "soil": "Well-draining cactus or succulent mix.",
+    "tips": "Avoid getting water on the leaves to prevent rot. Best for dry climates."
+  },
+  "Areca Palm": {
+    "watering": "Keep soil consistently moist but not soggy. Use filtered water if possible.",
+    "sunlight": "Bright, indirect light. Direct sun can scorch leaves.",
+    "soil": "Rich, slightly acidic potting mix with good drainage.",
+    "tips": "Enjoys high humidity. Mist leaves regularly in dry indoor environments."
+  },
+  "Chinese Money Plant": {
+    "watering": "Water when the top inch of soil feels dry. Drooping leaves mean it's thirsty.",
+    "sunlight": "Bright, indirect light. Rotate weekly for even growth.",
+    "soil": "Well-draining, organic-rich potting soil.",
+    "tips": "Propagates easily from 'pups' that sprout from the base."
+  },
+  "English Ivy": {
+    "watering": "Keep soil moist but not wet. Let top half-inch dry out in winter.",
+    "sunlight": "Medium to bright indirect light. Can tolerate lower light.",
+    "soil": "Standard well-draining potting mix.",
+    "tips": "Great for hanging baskets or climbing. Wash leaves occasionally to remove dust."
+  },
+  "Jade Plant": {
+    "watering": "Allow soil to dry out almost completely before watering. Very drought tolerant.",
+    "sunlight": "Full sun to bright indirect light.",
+    "soil": "Sandy, fast-draining succulent soil.",
+    "tips": "Symbol of good luck. Can live for decades with proper care."
+  },
+  "Monstera Deliciosa": {
+    "watering": "Water every 1-2 weeks, allowing soil to dry halfway between waterings.",
+    "sunlight": "Bright, indirect sunlight. Can adapt to medium light.",
+    "soil": "Peat-based potting mix with perlite for aeration.",
+    "tips": "Wipe large leaves with a damp cloth to help it 'breathe' better."
+  },
+  "Peace Lily": {
+    "watering": "Keep soil consistently moist. It will 'droop' visibly when it needs water.",
+    "sunlight": "Low to medium indirect light. Direct sun will burn the leaves.",
+    "soil": "High-quality potting soil that retains some moisture.",
+    "tips": "One of the best air purifiers. Keep away from drafts."
+  },
+  "Pothos": {
+    "watering": "Allow top inch of soil to dry out between waterings. Very forgiving.",
+    "sunlight": "Adaptable to low or bright indirect light.",
+    "soil": "Well-draining all-purpose potting soil.",
+    "tips": "Extremely hard to kill. Perfect for beginners and busy plant parents."
+  },
+  "Rubber Plant": {
+    "watering": "Water when top 2 inches of soil are dry. Reduce watering in winter.",
+    "sunlight": "Bright, indirect light. Variegated types need more light.",
+    "soil": "Well-draining, aerated potting mix.",
+    "tips": "Avoid cold drafts and sudden temperature changes."
+  },
+  "Snake Plant": {
+    "watering": "Allow soil to dry out completely. Water every 2-6 weeks depending on season.",
+    "sunlight": "Very adaptable; thrives in low to bright indirect light.",
+    "soil": "Free-draining cactus/succulent soil mix.",
+    "tips": "Converts CO2 to oxygen at night. Excellent for bedrooms."
+  },
+  "African Violet": {
+    "watering": "Keep soil moist but never soggy. Avoid getting water on leaves.",
+    "sunlight": "Bright, indirect light. Avoid direct midday sun.",
+    "soil": "Special African Violet mix or peat-based soil.",
+    "tips": "Water from the bottom by placing the pot in a saucer of water for 30 mins."
+  },
+  "Anthurium": {
+    "watering": "Water when the top inch of soil feels dry. Enjoys high humidity.",
+    "sunlight": "Bright, indirect light. Lower light reduces flower production.",
+    "soil": "Coarse, well-draining mix (like orchid bark and perlite).",
+    "tips": "The 'flowers' are actually modified leaves called spathes."
+  },
+  "Asparagus Fern": {
+    "watering": "Keep soil moist. Mist daily to maintain high humidity.",
+    "sunlight": "Bright, dappled light. Avoid direct afternoon sun.",
+    "soil": "Loose, organic-rich potting soil.",
+    "tips": "Not a true fern. Watch out for small thorns on mature stems."
+  },
+  "Begonia": {
+    "watering": "Water when top inch of soil is dry. Avoid overwatering.",
+    "sunlight": "Bright, indirect light. Some morning sun is okay.",
+    "soil": "Light, well-draining potting mix.",
+    "tips": "Rotate often to keep growth balanced and even."
+  },
+  "Bird of Paradise": {
+    "watering": "Keep soil moist during growth; let top 2 inches dry in winter.",
+    "sunlight": "Full sun to very bright indirect light.",
+    "soil": "Rich, well-draining loamy soil.",
+    "tips": "Needs lots of space as it grows quite large and tall."
+  },
+  "Birds Nest Fern": {
+    "watering": "Keep soil consistently moist. Water the soil, not the center 'nest'.",
+    "sunlight": "Medium to bright indirect light. Avoid direct sun.",
+    "soil": "Peat-based, loose potting mix.",
+    "tips": "High humidity is key to preventing brown leaf edges."
+  },
+  "Boston Fern": {
+    "watering": "Keep soil damp at all times. Use a humidifier or mist daily.",
+    "sunlight": "Bright, indirect light. Can tolerate some shade.",
+    "soil": "Peat-rich, well-draining soil.",
+    "tips": "Classic porch plant. Sheds leaves if it gets too dry."
+  },
+  "Calathea": {
+    "watering": "Use distilled or rainwater. Keep soil evenly moist.",
+    "sunlight": "Medium indirect light. Direct sun fades leaf patterns.",
+    "soil": "Moisture-retentive but well-draining mix.",
+    "tips": "Leaves move up and down during the day (Prayer plant family)."
+  },
+  "Cast Iron Plant": {
+    "watering": "Let soil dry halfway between waterings. Very drought tolerant.",
+    "sunlight": "Low to medium light. Thrives in dark corners.",
+    "soil": "Standard, well-draining potting soil.",
+    "tips": "Toughest indoor plant. Tolerates dust and neglect."
+  },
+  "Chinese Evergreen": {
+    "watering": "Water when top 2 inches dry. Tolerates low water.",
+    "sunlight": "Low to medium indirect light. Keep away from direct sun.",
+    "soil": "Well-draining potting soil.",
+    "tips": "Easy care and very resistant to common indoor pests."
+  },
+  "Christmas Cactus": {
+    "watering": "Keep soil moist but not wet. Reduce water after blooming.",
+    "sunlight": "Bright, indirect light. Needs dark nights to bloom.",
+    "soil": "Well-draining, porous soil mix.",
+    "tips": "Can live for decades and be passed down as an heirloom."
+  },
+  "Chrysanthemum": {
+    "watering": "Keep soil consistently moist. Water daily in hot weather.",
+    "sunlight": "Bright, direct sunlight is best.",
+    "soil": "Rich, fertile, well-draining garden soil.",
+    "tips": "Great for outdoor seasonal color and air purification."
+  },
+  "Ctenanthe": {
+    "watering": "Keep soil moist. Enjoys high humidity and warm air.",
+    "sunlight": "Medium indirect light. Keep away from direct sun.",
+    "soil": "Rich, moisture-retentive potting mix.",
+    "tips": "Wipe leaves with a damp cloth to keep them shiny."
+  },
+  "Daffodils": {
+    "watering": "Water regularly during growth. Let soil dry after flowering.",
+    "sunlight": "Full sun to partial shade.",
+    "soil": "Well-draining, fertile garden soil.",
+    "tips": "Plant bulbs in autumn for spring blooms. Deer resistant."
+  },
+  "Dracaena": {
+    "watering": "Allow top 50% of soil to dry out. Sensitive to fluoride.",
+    "sunlight": "Bright to medium indirect light.",
+    "soil": "Well-draining commercial potting mix.",
+    "tips": "Trim lower leaves as they age to maintain a clean look."
+  },
+  "Dumb Cane": {
+    "watering": "Water when top inch of soil is dry. Use room temp water.",
+    "sunlight": "Medium to bright indirect light.",
+    "soil": "Standard well-draining potting soil.",
+    "tips": "Sap is irritating; wear gloves when pruning or handling."
+  },
+  "Elephant Ear": {
+    "watering": "Keep soil consistently moist. Very thirsty during summer.",
+    "sunlight": "Bright, indirect light or partial shade.",
+    "soil": "Rich, organic-rich soil that holds moisture.",
+    "tips": "Grows best in warm, humid conditions with plenty of space."
+  },
+  "Hyacinth": {
+    "watering": "Keep soil moist during growth and bloom period.",
+    "sunlight": "Full sun to partial shade.",
+    "soil": "Loose, well-draining fertile soil.",
+    "tips": "Highly fragrant flowers. Great for spring gardens."
+  },
+  "Iron Cross Begonia": {
+    "watering": "Water when top inch dry. Avoid getting leaves wet.",
+    "sunlight": "Bright, indirect light. Direct sun will scorch leaves.",
+    "soil": "Light, aerated peat-based mix.",
+    "tips": "Grown for its unique textured foliage and cross pattern."
+  },
+  "Kalanchoe": {
+    "watering": "Allow soil to dry out completely. Very drought tolerant.",
+    "sunlight": "Bright, direct sunlight is preferred.",
+    "soil": "Well-draining cactus or succulent mix.",
+    "tips": "Re-blooms best with long periods of darkness in winter."
+  },
+  "Lilium": {
+    "watering": "Keep soil consistently moist during the bloom season.",
+    "sunlight": "Bright, indirect light or morning sun.",
+    "soil": "Rich, well-draining slightly acidic soil.",
+    "tips": "Very toxic to cats; keep out of reach of pets."
+  },
+  "Lily of the Valley": {
+    "watering": "Keep soil moist. Thrives in cool, damp locations.",
+    "sunlight": "Partial to full shade. Avoid direct sun.",
+    "soil": "Rich, organic-rich moisture-retentive soil.",
+    "tips": "Spreads easily as a groundcover. Very fragrant."
+  },
+  "Money Tree": {
+    "watering": "Water when top 2 inches dry. Prefers deep waterings.",
+    "sunlight": "Bright, indirect light. Rotate for even growth.",
+    "soil": "Peat-based, well-draining potting soil.",
+    "tips": "Avoid moving it frequently; it prefers a stable spot."
+  },
+  "Orchid": {
+    "watering": "Water about once a week. Let water run through the bark.",
+    "sunlight": "Bright, indirect light (east-facing window is ideal).",
+    "soil": "Special orchid bark or moss; never standard soil.",
+    "tips": "Needs good air circulation around the roots."
+  },
+  "Parlor Palm": {
+    "watering": "Water when top inch of soil feels dry. Forgiving of neglect.",
+    "sunlight": "Low to medium light. Tolerates very low light well.",
+    "soil": "Standard well-draining potting soil.",
+    "tips": "Perfect for offices or dark corners of the home."
+  },
+  "Poinsettia": {
+    "watering": "Water when soil feels dry to the touch. Don't let it sit in water.",
+    "sunlight": "Bright, indirect light (6 hours a day).",
+    "soil": "Standard, well-draining potting mix.",
+    "tips": "Sensitive to temperature drops and cold windows."
+  },
+  "Polka Dot Plant": {
+    "watering": "Keep soil moist. It will wilt noticeably when thirsty.",
+    "sunlight": "Bright, indirect light for best color intensity.",
+    "soil": "Organic-rich, well-draining potting soil.",
+    "tips": "Pinch back stems to keep the plant bushy and full."
+  },
+  "Ponytail Palm": {
+    "watering": "Water every 2-3 weeks. Store water in its bulbous base.",
+    "sunlight": "Bright, direct sunlight is best but tolerates less.",
+    "soil": "Fast-draining cactus or succulent mix.",
+    "tips": "Not a true palm; actually related to Agaves."
+  },
+  "Prayer Plant": {
+    "watering": "Keep soil moist but not soggy. Use lukewarm water.",
+    "sunlight": "Bright, indirect light. Leaves curl in too much sun.",
+    "soil": "Peat-based potting mix that holds moisture.",
+    "tips": "Mist leaves or use a pebble tray to boost humidity."
+  },
+  "Rattlesnake Plant": {
+    "watering": "Keep soil moist but never wet. Use filtered water.",
+    "sunlight": "Low to medium indirect light.",
+    "soil": "Well-draining but moisture-retentive mix.",
+    "tips": "Features beautiful wavy-edged leaves with dark spots."
+  },
+  "Sago Palm": {
+    "watering": "Allow top 2 inches of soil to dry. Drought tolerant.",
+    "sunlight": "Bright, indirect light or some direct morning sun.",
+    "soil": "Sandy, well-draining potting soil.",
+    "tips": "Very slow-growing. All parts are toxic if ingested."
+  },
+  "Schefflera": {
+    "watering": "Water when top inch dry. Tolerates occasional dryness.",
+    "sunlight": "Bright, indirect light. Can adapt to medium light.",
+    "soil": "Rich, well-draining potting soil.",
+    "tips": "Prune back if it gets too leggy to encourage bushy growth."
+  },
+  "Tradescantia": {
+    "watering": "Keep soil moist. Let top inch dry between waterings.",
+    "sunlight": "Bright, indirect light for vibrant purple color.",
+    "soil": "Standard well-draining potting soil.",
+    "tips": "Grows very fast and is easy to propagate in water."
+  },
+  "Tulip": {
+    "watering": "Water regularly during growth and flowering.",
+    "sunlight": "Full sun to partial shade.",
+    "soil": "Well-draining, fertile garden soil.",
+    "tips": "Best treated as an annual in warmer climates."
+  },
+  "Venus Flytrap": {
+    "watering": "Use ONLY distilled or rainwater. Keep soil wet.",
+    "sunlight": "Full sun (4+ hours direct sunlight).",
+    "soil": "Pure peat moss and perlite/sand; NO fertilizer.",
+    "tips": "Do not trigger traps for fun; it wastes the plant's energy."
+  },
+  "Yucca": {
+    "watering": "Allow soil to dry out significantly. Very drought hardy.",
+    "sunlight": "Full sun to very bright indirect light.",
+    "soil": "Sandy, well-draining potting mix.",
+    "tips": "Requires very little maintenance once established."
+  },
+  "ZZ Plant (Library)": {
+    "watering": "Allow soil to dry out completely. Water once a month.",
+    "sunlight": "Low to bright indirect light. Very adaptable.",
+    "soil": "Well-draining, all-purpose potting soil.",
+    "tips": "Thrives on neglect. Perfect for areas with no windows."
+  }
+}
