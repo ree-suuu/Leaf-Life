@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapPin, ArrowRight, Sparkles } from 'lucide-react';
+import { MapPin, ArrowRight, Sparkles, Loader2 } from 'lucide-react';
 import './Scan.css'; // Reusing some scan styles for consistency
 
 export default function SmartRecommendation() {
@@ -10,6 +10,7 @@ export default function SmartRecommendation() {
   const [showResults, setShowResults] = useState(false);
   const [recommendedPlants, setRecommendedPlants] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [summaryData, setSummaryData] = useState(null);
   const navigate = useNavigate();
 
   const requestLocation = () => {
@@ -50,13 +51,21 @@ export default function SmartRecommendation() {
     
     const lightMap = { '1': 'Low', '2': 'Medium', '3': 'High' };
     const sunlight = lightMap[lightLevel];
-    const spaceMap = { 'indoor': 'indoor', 'rooftop': 'rooftop', 'balcony': 'balcony', 'garden': 'garden' };
-    const space = spaceMap[spaceType];
+    const space = spaceType; // indoor, rooftop, balcony, garden
 
     try {
-      const response = await fetch(`/api/recommend?space=${space}&sunlight=${sunlight}&location=${location}`);
+      // Use URLSearchParams for safe URI encoding
+      const params = new URLSearchParams({
+        space: space,
+        sunlight: sunlight,
+        location: location
+      });
+
+      const response = await fetch(`/api/recommend?${params.toString()}`);
+      if (!response.ok) throw new Error('Failed to fetch recommendations');
+      
       const data = await response.json();
-      // data now looks like: { summary: {...}, plants: [...] }
+      
       setRecommendedPlants(data.plants || []);
       setSummaryData(data.summary || null);
       setShowResults(true);
@@ -67,8 +76,6 @@ export default function SmartRecommendation() {
       setLoading(false);
     }
   };
-
-  const [summaryData, setSummaryData] = useState(null);
 
   return (
     <div className="animate-fade-in" style={{ padding: '1.5rem', maxWidth: '800px', margin: '0 auto' }}>
@@ -152,7 +159,11 @@ export default function SmartRecommendation() {
             </div>
 
             <button type="submit" className="btn-primary" disabled={loading} style={{ width: '100%', padding: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', fontSize: '1.125rem' }}>
-              {loading ? 'Finding perfect plants...' : (
+              {loading ? (
+                <>
+                  <Loader2 className="animate-spin" size={20} /> Finding perfect plants...
+                </>
+              ) : (
                 <>
                   Find My Perfect Match <ArrowRight size={20} />
                 </>
@@ -186,6 +197,11 @@ export default function SmartRecommendation() {
                   <div style={{ fontWeight: '600' }}>{summaryData.sunlight}</div>
                 </div>
               </div>
+              {summaryData.note && (
+                <div style={{ marginTop: '1rem', fontSize: '0.875rem', color: 'var(--primary)', fontStyle: 'italic', borderTop: '1px solid rgba(16, 185, 129, 0.2)', paddingTop: '0.5rem' }}>
+                  💡 {summaryData.note}
+                </div>
+              )}
             </div>
           )}
 
@@ -227,8 +243,12 @@ export default function SmartRecommendation() {
                 </div>
               ))
             ) : (
-              <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '4rem 2rem' }}>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '1.125rem' }}>No plants found for this specific combination. Try adjusting your space or light level!</p>
+              <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '4rem 2rem', background: 'var(--bg-secondary)', borderRadius: '1.5rem' }}>
+                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🪴</div>
+                <h4 style={{ fontWeight: '700', marginBottom: '0.5rem' }}>No exact matches found</h4>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', maxWidth: '300px', margin: '0 auto' }}>
+                  We couldn't find any plants matching all your criteria. Try loosening your light or space requirements!
+                </p>
               </div>
             )}
           </div>
@@ -237,4 +257,3 @@ export default function SmartRecommendation() {
     </div>
   );
 }
-

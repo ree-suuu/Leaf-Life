@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Filter, Heart, MapPin, ShoppingCart, X, Minus, Plus, QrCode, CheckCircle } from 'lucide-react';
+import { Search, Filter, Heart, MapPin, ShoppingCart, X, Minus, Plus, QrCode, CheckCircle, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import './Marketplace.css';
 
@@ -15,7 +15,8 @@ export default function Marketplace() {
   const [showQuantitySelector, setShowQuantitySelector] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [showQRPrompt, setShowQRPrompt] = useState(false);
-  const [paymentProcessing, setPaymentProcessing] = useState(false);
+  const [paymentSessionId, setPaymentSessionId] = useState(null);
+  const [paymentStatus, setPaymentStatus] = useState('pending'); // pending, completed
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
 
@@ -34,6 +35,27 @@ export default function Marketplace() {
     fetchPlants();
   }, []);
 
+  // Polling for payment status
+  useEffect(() => {
+    let interval;
+    if (showQRPrompt && paymentSessionId && paymentStatus === 'pending') {
+      interval = setInterval(async () => {
+        try {
+          const response = await fetch(`/api/payment/status/${paymentSessionId}`);
+          const data = await response.json();
+          if (data.status === 'completed') {
+            setPaymentStatus('completed');
+            clearInterval(interval);
+            handleFinalizePurchase();
+          }
+        } catch (err) {
+          console.error("Polling error:", err);
+        }
+      }, 2000);
+    }
+    return () => clearInterval(interval);
+  }, [showQRPrompt, paymentSessionId, paymentStatus]);
+
   const filteredPlants = plants.filter(plant => {
     if (activeTab !== 'all' && plant.type !== activeTab) return false;
     if (searchQuery && !plant.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
@@ -41,33 +63,43 @@ export default function Marketplace() {
   });
 
   const handleBuyClick = (e, plant) => {
-    e.stopPropagation(); // Prevent navigation to detail page
+    e.stopPropagation();
     setSelectedPlant(plant);
     setQuantity(1);
     setShowQuantitySelector(true);
     setError('');
   };
 
-  const handleProceedToPayment = () => {
+  const handleProceedToPayment = async () => {
     const userStr = localStorage.getItem('user');
     if (!userStr) {
-      setError('Please log in to purchase.');
       alert('Please log in to purchase.');
       return;
     }
-    setShowQuantitySelector(false);
-    setShowQRPrompt(true);
+    const user = JSON.parse(userStr);
+    const amount = parseInt(selectedPlant.price.replace('Rs. ', '')) * quantity;
+
+    try {
+      const response = await fetch('/api/payment/initiate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plantId: selectedPlant.id, userId: user.id, quantity, amount })
+      });
+      const data = await response.json();
+      setPaymentSessionId(data.sessionId);
+      setPaymentStatus('pending');
+      setShowQuantitySelector(false);
+      setShowQRPrompt(true);
+    } catch (err) {
+      alert("Failed to initiate payment.");
+    }
   };
 
-  const handlePaymentComplete = async () => {
-    setPaymentProcessing(true);
+  const handleFinalizePurchase = async () => {
     const userStr = localStorage.getItem('user');
     const user = JSON.parse(userStr);
     
     try {
-      // Simulate bank server detection delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
       const buyResponse = await fetch(`/api/plants/${selectedPlant.id}/buy`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -77,17 +109,13 @@ export default function Marketplace() {
       if (buyResponse.ok) {
         setShowQRPrompt(false);
         setSuccess(true);
-        // Refresh plants list
+        // Refresh plants
         const refreshRes = await fetch('/api/plants');
         const newData = await refreshRes.json();
         setPlants(newData);
-      } else {
-        alert('Payment verification failed. Please try again.');
       }
     } catch (err) {
-      console.error("Payment error:", err);
-    } finally {
-      setPaymentProcessing(false);
+      console.error("Finalization error:", err);
     }
   };
 
@@ -96,8 +124,13 @@ export default function Marketplace() {
     setShowQRPrompt(false);
     setSuccess(false);
     setSelectedPlant(null);
+    setPaymentSessionId(null);
   };
 
+  // Determine local IP for mobile access
+  // ✅ Dynamically use whatever IP the desktop browser is on
+const localIP = window.location.hostname;
+const paymentURL = `http://${localIP}:5173/payment-mobile/${paymentSessionId}`;
   return (
     <div className="animate-fade-in marketplace-container">
       <div className="marketplace-header">
@@ -116,14 +149,7 @@ export default function Marketplace() {
 
       <div className="tabs-container">
         {['all', 'swap', 'thrift', 'buy', 'sell'].map(tab => (
-          <button 
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`tab-button ${activeTab === tab ? 'active' : ''}`}
-            type="button"
-          >
-            {tab}
-          </button>
+          <button key={tab} onClick={() => setActiveTab(tab)} className={`tab-button ${activeTab === tab ? 'active' : ''}`} type="button">{tab}</button>
         ))}
       </div>
 
@@ -133,14 +159,7 @@ export default function Marketplace() {
         ) : filteredPlants.map((plant) => (
           <div key={plant.id} className="plant-card" onClick={() => navigate(`/purchase/${plant.id}`)}>
             <div className="plant-image">
-              <img 
-                src={plant.image} 
-                alt={plant.name} 
-                className="plant-img-actual"
-                onError={(e) => {
-                  e.target.src = 'https://images.unsplash.com/photo-1545239351-ef35f43d514b?q=80&w=400';
-                }}
-              />
+              <img src={plant.image} alt={plant.name} className="plant-img-actual" onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1545239351-ef35f43d514b?q=80&w=400'; }} />
               <div className="badge">{plant.type}</div>
               <button className="like-btn" type="button" onClick={(e) => e.stopPropagation()}><Heart size={18} /></button>
             </div>
@@ -166,13 +185,6 @@ export default function Marketplace() {
         ))}
       </div>
       
-      {filteredPlants.length === 0 && !loading && (
-        <div className="empty-state">
-          <p className="text-subtle">No plants found. Try a different search.</p>
-        </div>
-      )}
-
-      {/* Quantity Selector Modal */}
       {showQuantitySelector && (
         <div className="modal-overlay" onClick={closeModals}>
           <div className="glass-panel modal-content animate-scale-up" onClick={(e) => e.stopPropagation()}>
@@ -181,21 +193,16 @@ export default function Marketplace() {
               <h3>Select Quantity</h3>
               <p>How many {selectedPlant?.name}s do you want?</p>
             </div>
-            
             <div className="quantity-controls">
               <button type="button" onClick={() => setQuantity(Math.max(1, quantity - 1))} className="qty-btn"><Minus size={20} /></button>
               <span className="qty-value">{quantity}</span>
               <button type="button" onClick={() => setQuantity(Math.min(10, quantity + 1))} className="qty-btn"><Plus size={20} /></button>
             </div>
-
-            <button type="button" onClick={handleProceedToPayment} className="btn-primary w-full">
-              Confirm & Proceed to Payment
-            </button>
+            <button type="button" onClick={handleProceedToPayment} className="btn-primary w-full">Confirm & Show QR</button>
           </div>
         </div>
       )}
 
-      {/* QR Code Payment Modal */}
       {showQRPrompt && (
         <div className="modal-overlay" onClick={closeModals}>
           <div className="glass-panel modal-content animate-scale-up text-center" onClick={(e) => e.stopPropagation()}>
@@ -203,29 +210,32 @@ export default function Marketplace() {
             <div className="modal-header">
               <div className="qr-icon" style={{ marginBottom: '1rem', color: 'var(--primary)', display: 'flex', justifyContent: 'center' }}><QrCode size={48} /></div>
               <h3>Scan to Pay</h3>
-              <p>Scan the QR code with your bank app</p>
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Scan this with your mobile to see the bill and pay.</p>
               <p className="purchase-summary" style={{ fontWeight: '700', color: 'var(--primary)', fontSize: '1.25rem' }}>
                 Total: Rs. {parseInt(selectedPlant?.price.replace('Rs. ', '')) * quantity}
               </p>
             </div>
 
-            <div style={{ backgroundColor: 'white', padding: '1rem', borderRadius: '1rem', display: 'inline-block', margin: '1rem 0' }}>
+            <div style={{ backgroundColor: 'white', padding: '1rem', borderRadius: '1rem', display: 'inline-block', margin: '1.5rem 0', border: '1px solid #eee' }}>
               <img 
-                src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=PlantApp-Payment-Simulation" 
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(paymentURL)}`} 
                 alt="Payment QR Code" 
                 style={{ width: '200px', height: '200px' }}
               />
             </div>
 
-            <button type="button" onClick={handlePaymentComplete} disabled={paymentProcessing} className="btn-primary w-full" style={{ marginTop: '1rem' }}>
-              {paymentProcessing ? 'Detecting Payment...' : 'I\'ve Scanned & Paid'}
-            </button>
-            <p className="text-subtle" style={{ fontSize: '0.75rem', marginTop: '0.75rem' }}>Waiting for bank server confirmation...</p>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', padding: '1rem', backgroundColor: 'var(--bg-secondary)', borderRadius: '1rem' }}>
+              <Loader2 className="animate-spin" size={20} color="var(--primary)" />
+              <span style={{ fontSize: '0.875rem', fontWeight: '600' }}>Waiting for mobile scan...</span>
+            </div>
+            
+            <p className="text-subtle" style={{ fontSize: '0.75rem', marginTop: '1rem' }}>
+              Keep this window open. Once you pay on your phone, this will update automatically.
+            </p>
           </div>
         </div>
       )}
 
-      {/* Success Modal */}
       {success && (
         <div className="modal-overlay" onClick={closeModals}>
           <div className="glass-panel modal-content animate-scale-up text-center" onClick={(e) => e.stopPropagation()}>

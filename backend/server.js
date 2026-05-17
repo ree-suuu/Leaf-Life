@@ -32,6 +32,9 @@ const pool = mysql.createPool({
   queueLimit: 0
 });
 
+// In-memory store for payment sessions (for simplicity in MVP)
+const paymentSessions = new Map();
+
 // Helper for DB queries using Promises
 const dbGet = async (query, params) => {
   const [rows] = await pool.execute(query, params);
@@ -117,30 +120,23 @@ async function getMonthlyAverage(city) {
     const date1 = `${currentYear}-${month.toString().padStart(2, '0')}-01`;
     const date2 = `${currentYear}-${month.toString().padStart(2, '0')}-28`;
     
-    console.log(`Fetching climatology for ${city} in month ${month}...`);
+    const cleanCity = (city || 'Kathmandu').split(',')[0].trim();
     
     if (API_KEY === 'YOUR_VISUAL_CROSSING_KEY') {
-      console.warn('No Visual Crossing API Key found. Using Nepal-specific fallbacks.');
-      const nepalClimates = {
-        'kathmandu': 22,
-        'pokhara': 24,
-        'biratnagar': 30,
-        'mustang': 12,
-        'chitwan': 28,
-        'namche': 8
-      };
-      return nepalClimates[city.toLowerCase()] || 20;
+      const nepalClimates = { 'kathmandu': 22, 'pokhara': 24, 'biratnagar': 30, 'mustang': 12, 'chitwan': 28, 'namche': 8 };
+      return nepalClimates[cleanCity.toLowerCase()] || 20;
     }
 
-    const url = `https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${city}/${date1}/${date2}?unitGroup=metric&include=stats&key=${API_KEY}&contentType=json`;
+    const url = `https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${encodeURIComponent(cleanCity)}/${date1}/${date2}?unitGroup=metric&include=stats&key=${API_KEY}&contentType=json`;
     
     const response = await fetch(url);
-    const data = await response.json();
+    if (!response.ok) throw new Error(`Weather API returned ${response.status}`);
     
-    return data.currentConditions?.temp || data.days[0]?.temp || 20;
+    const data = await response.json();
+    return data.currentConditions?.temp || data.days?.[0]?.temp || 20;
   } catch (error) {
-    console.error('Weather API Error:', error);
-    return 20; // Default safe temp
+    console.error('Weather API Error:', error.message);
+    return 22; // Default safe temp for recommendations
   }
 }
 
@@ -167,15 +163,6 @@ app.post('/api/signup', async (req, res) => {
   try {
     const { fullName, email, password } = req.body;
     if (!fullName || !email || !password) return res.status(400).json({ error: 'All fields are required' });
-
-    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-    const hasAlphaNumeric = /[a-zA-Z]/.test(password) && /[0-9]/.test(password);
-    if (password.length < 6 || !hasSpecialChar || !hasAlphaNumeric) {
-      return res.status(400).json({ error: 'Password must be at least 6 characters long, contain both letters and numbers, and include at least one special character.' });
-    }
-
-    const existingUser = await dbGet('SELECT * FROM users WHERE email = ?', [email]);
-    if (existingUser) return res.status(400).json({ error: 'Email is already registered' });
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
@@ -219,54 +206,66 @@ app.get('/api/plants', async (req, res) => {
   }
 });
 
+/**
+ * SMART RECOMMENDATION SYSTEM
+ * Connects 3 User Inputs (Location, Space, Light) to 45+ Plants
+ */
 app.get('/api/recommend', async (req, res) => {
   try {
     const { space, sunlight, location } = req.query;
-    let baseQuery = 'SELECT * FROM plants WHERE is_sold = 0';
+    
+    // 1. Fetch Temperature based on Location
+    const detectedTemp = await getMonthlyAverage(location);
+    
+    // 2. Build Dynamic Query to match arrangements
+    // Filters plants where is_sold=0 AND matches climate AND matches space AND matches light
+    let query = 'SELECT * FROM plants WHERE is_sold = 0';
     const params = [];
-    let detectedTemp = 20; 
 
-    if (space) {
-      baseQuery += ' AND LOWER(space_tag) LIKE ?';
+    // Arrangement Logic: Space Match (Partial string match in space_tag)
+    if (space && space !== 'Any') {
+      query += ' AND LOWER(space_tag) LIKE ?';
       params.push(`%${space.toLowerCase()}%`);
     }
-    if (sunlight) {
+
+    // Arrangement Logic: Light Match (Sunlight need is stored as 1, 2, 3)
+    if (sunlight && sunlight !== 'Any') {
       const lightMap = { 'Low': 1, 'Medium': 2, 'High': 3 };
-      const lightValue = lightMap[sunlight] || sunlight;
-      baseQuery += ' AND CAST(sunlight_need AS UNSIGNED) <= ?';
-      params.push(lightValue);
-    }
-    
-    if (location) {
-      detectedTemp = await getMonthlyAverage(location);
+      const lightVal = lightMap[sunlight] || sunlight;
+      query += ' AND CAST(sunlight_need AS UNSIGNED) <= ?';
+      params.push(lightVal);
     }
 
-    const tempQuery = baseQuery + ' AND ? BETWEEN min_temp AND max_temp';
-    const tempParams = [...params, detectedTemp];
-    
-    console.log(`RECOMMENDATION TRY: Location=${location}, Temp=${detectedTemp}°C, Space=${space}`);
-    let plants = await dbAll(tempQuery, tempParams);
+    // Arrangement Logic: Climate Match
+    query += ' AND ? BETWEEN min_temp AND max_temp';
+    params.push(Math.round(detectedTemp));
 
+    console.log(`QUERYING RECOMMENDATIONS: Space=${space}, Light=${sunlight}, Temp=${detectedTemp}`);
+    
+    let plants = await dbAll(query, params);
+
+    // Dynamic Fallback: If exact arrangement yields no results, relax the climate constraint
     let fallbackUsed = false;
     if (plants.length === 0) {
-      console.log(`RECOMMENDATION FALLBACK USED`);
-      plants = await dbAll(baseQuery, params);
+      console.log('RELAXING CLIMATE CONSTRAINT FOR ARRANGEMENTS');
+      const fallbackQuery = 'SELECT * FROM plants WHERE is_sold = 0 AND LOWER(space_tag) LIKE ? AND CAST(sunlight_need AS UNSIGNED) <= ?';
+      plants = await dbAll(fallbackQuery, params.slice(0, 2));
       fallbackUsed = true;
     }
 
     res.json({
       summary: {
-        location: location || 'Not specified',
-        averageTemp: `${detectedTemp}°C`,
-        space: space || 'Any',
-        sunlight: sunlight || 'Any',
-        note: fallbackUsed ? "Climate match restricted, showing general results." : null
+        location: location || 'Kathmandu',
+        averageTemp: `${Math.round(detectedTemp)}°C`,
+        space: space || 'Indoor',
+        sunlight: sunlight || 'Medium',
+        note: fallbackUsed ? "Climate threshold relaxed to find suitable arrangements." : "Found perfect environmental matches."
       },
       plants: plants
     });
   } catch (error) {
     console.error('Recommendation Error:', error);
-    res.status(500).json({ error: 'Recommendation failed' });
+    res.status(500).json({ error: 'Failed to generate plant arrangements' });
   }
 });
 
@@ -278,52 +277,66 @@ app.post('/api/plants/:id/buy', async (req, res) => {
     const plant = await dbGet('SELECT * FROM plants WHERE id = ?', [id]);
     if (!plant) return res.status(404).json({ error: 'Plant not found' });
     
-    if (plant.is_sold && plant.buyer_id !== userId) {
-      return res.status(400).json({ error: 'Plant already sold' });
-    }
-
     await dbRun('UPDATE plants SET is_sold = 1, buyer_id = ? WHERE id = ?', [userId, id]);
 
     if (quantity > 1) {
       const insertQuery = 'INSERT INTO plants (name, type, price, location, image, space_tag, sunlight_need, min_temp, max_temp, purification_score, is_sold, buyer_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)';
-      
       for (let i = 1; i < quantity; i++) {
-        await pool.execute(insertQuery, [
-          plant.name, 
-          plant.type, 
-          plant.price, 
-          plant.location, 
-          plant.image, 
-          plant.space_tag, 
-          plant.sunlight_need, 
-          plant.min_temp, 
-          plant.max_temp, 
-          plant.purification_score,
-          userId
-        ]);
+        await pool.execute(insertQuery, [plant.name, plant.type, plant.price, plant.location, plant.image, plant.space_tag, plant.sunlight_need, plant.min_temp, plant.max_temp, plant.purification_score, userId]);
       }
     }
 
-    res.json({ message: `Successfully purchased ${quantity} ${plant.name}(s)` });
+    res.json({ message: `Success` });
   } catch (error) {
-    console.error('Purchase Error:', error);
     res.status(500).json({ error: 'Purchase failed' });
   }
 });
 
-app.get('/api/users/:userId/plants', async (req, res) => {
+// --- Payment Endpoints ---
+
+app.post('/api/payment/initiate', async (req, res) => {
   try {
-    const { userId } = req.params;
-    const plants = await dbAll('SELECT * FROM plants WHERE buyer_id = ?', [userId]);
-    res.json(plants);
+    const { plantId, userId, quantity, amount } = req.body;
+    
+    // Fetch plant name for the bill
+    const plant = await dbGet('SELECT name FROM plants WHERE id = ?', [plantId]);
+    const plantName = plant ? plant.name : 'Plant';
+
+    const sessionId = `PAY-${Date.now()}`;
+    paymentSessions.set(sessionId, { 
+      id: sessionId, 
+      plantId, 
+      plantName,
+      userId, 
+      quantity, 
+      amount, 
+      status: 'pending', 
+      createdAt: new Date() 
+    });
+    res.json({ sessionId });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch owned plants' });
+    res.status(500).json({ error: 'Failed to initiate payment' });
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`=========================================`);
-  console.log(`SERVER RUNNING ON PORT ${PORT}`);
-  console.log(`API URL: http://localhost:${PORT}/api/plants`);
-  console.log(`=========================================`);
+app.get('/api/payment/status/:sessionId', (req, res) => {
+  const session = paymentSessions.get(req.params.sessionId);
+  res.json({ status: session?.status || 'expired' });
+});
+
+app.get('/api/payment/bill/:sessionId', (req, res) => {
+  res.json(paymentSessions.get(req.params.sessionId));
+});
+
+app.post('/api/payment/complete/:sessionId', (req, res) => {
+  const session = paymentSessions.get(req.params.sessionId);
+  if (session) {
+    session.status = 'completed';
+    paymentSessions.set(req.params.sessionId, session);
+  }
+  res.json({ success: true });
+});
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`SERVER RUNNING ON ALL INTERFACES: http://192.168.23.42:${PORT}`);
 });

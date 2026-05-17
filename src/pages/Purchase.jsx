@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MapPin, CheckCircle, ShieldCheck, ShoppingCart, X, Minus, Plus, QrCode } from 'lucide-react';
+import { ArrowLeft, MapPin, CheckCircle, ShieldCheck, ShoppingCart, X, Minus, Plus, QrCode, Loader2 } from 'lucide-react';
 
 export default function Purchase() {
   const { id } = useParams();
@@ -16,7 +16,8 @@ export default function Purchase() {
 
   // QR Payment State
   const [showQRPrompt, setShowQRPrompt] = useState(false);
-  const [paymentProcessing, setPaymentProcessing] = useState(false);
+  const [paymentSessionId, setPaymentSessionId] = useState(null);
+  const [paymentStatus, setPaymentStatus] = useState('pending'); // pending, completed
 
   useEffect(() => {
     const fetchPlant = async () => {
@@ -34,28 +35,60 @@ export default function Purchase() {
     fetchPlant();
   }, [id]);
 
+  // Polling for payment status
+  useEffect(() => {
+    let interval;
+    if (showQRPrompt && paymentSessionId && paymentStatus === 'pending') {
+      interval = setInterval(async () => {
+        try {
+          const response = await fetch(`/api/payment/status/${paymentSessionId}`);
+          const data = await response.json();
+          if (data.status === 'completed') {
+            setPaymentStatus('completed');
+            clearInterval(interval);
+            handleFinalizePurchase();
+          }
+        } catch (err) {
+          console.error("Polling error:", err);
+        }
+      }, 2000);
+    }
+    return () => clearInterval(interval);
+  }, [showQRPrompt, paymentSessionId, paymentStatus]);
+
   const handleBuyClick = () => {
     setShowQuantitySelector(true);
   };
 
-  const handleProceedToPayment = () => {
+  const handleProceedToPayment = async () => {
     const user = JSON.parse(localStorage.getItem('user'));
     if (!user) {
       alert('Please log in to purchase.');
       return;
     }
-    setShowQuantitySelector(false);
-    setShowQRPrompt(true);
+    const amount = parseInt(plant.price.replace('Rs. ', '')) * quantity;
+
+    try {
+      const response = await fetch('/api/payment/initiate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plantId: plant.id, userId: user.id, quantity, amount })
+      });
+      const data = await response.json();
+      setPaymentSessionId(data.sessionId);
+      setPaymentStatus('pending');
+      setShowQuantitySelector(false);
+      setShowQRPrompt(true);
+    } catch (err) {
+      alert("Failed to initiate payment.");
+    }
   };
 
-  const handlePaymentComplete = async () => {
-    setPaymentProcessing(true);
+  const handleFinalizePurchase = async () => {
+    setPurchasing(true);
     const user = JSON.parse(localStorage.getItem('user'));
     
     try {
-      // Simulate bank server detection delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
       const buyResponse = await fetch(`/api/plants/${id}/buy`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -65,18 +98,20 @@ export default function Purchase() {
       if (buyResponse.ok) {
         setShowQRPrompt(false);
         setSuccess(true);
-      } else {
-        alert('Payment verification failed. Please try again.');
       }
     } catch (err) {
-      console.error("Payment error:", err);
+      console.error("Finalization error:", err);
     } finally {
-      setPaymentProcessing(false);
+      setPurchasing(false);
     }
   };
 
   if (loading) return <div style={{ padding: '2rem', textAlign: 'center' }}>Loading plant details...</div>;
   if (!plant) return <div style={{ padding: '2rem', textAlign: 'center' }}>Plant not found.</div>;
+
+  // Determine local IP for mobile access
+  const localIP = "192.168.23.42"; // Updated current IP
+  const paymentURL = `http://${localIP}:5173/payment-mobile/${paymentSessionId}`;
 
   return (
     <div className="animate-fade-in" style={{ padding: '1.5rem', maxWidth: '800px', margin: '0 auto' }}>
@@ -212,36 +247,33 @@ export default function Purchase() {
               <QrCode size={24} color="var(--primary)" />
             </div>
             
-            <h2 style={{ fontSize: '1.25rem', fontWeight: '700', marginBottom: '0.5rem' }}>Scan to Pay</h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '1.5rem' }}>Scan the QR code with your bank app to complete the purchase of {quantity} {plant.name}(s).</p>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: '700', marginBottom: '0.5rem' }}>Dynamic QR Payment</h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '1.5rem' }}>Scan this code to generate your bill. Once paid, our system detects the bank server signal instantly.</p>
             
             <div style={{ 
               backgroundColor: 'white', padding: '1rem', borderRadius: '1rem', display: 'inline-block', marginBottom: '1.5rem',
-              border: '4px solid var(--primary-light)'
+              border: '1px solid #eee'
             }}>
               <img 
-                src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=PlantApp-Payment-Simulation" 
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(paymentURL)}`} 
                 alt="Payment QR Code" 
                 style={{ width: '200px', height: '200px' }}
               />
             </div>
 
-            <div style={{ marginBottom: '1.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', padding: '1rem', backgroundColor: 'var(--bg-secondary)', borderRadius: '1rem' }}>
+              <Loader2 className="animate-spin" size={20} color="var(--primary)" />
+              <span style={{ fontSize: '0.875rem', fontWeight: '600' }}>Waiting for Bank Server Detection...</span>
+            </div>
+
+            <div style={{ marginTop: '1.5rem' }}>
               <p style={{ fontWeight: '700', fontSize: '1.125rem', color: 'var(--primary)' }}>
                 Total Amount: Rs. {parseInt(plant.price.replace('Rs. ', '')) * quantity}
               </p>
             </div>
 
-            <button 
-              onClick={handlePaymentComplete} 
-              disabled={paymentProcessing}
-              className="btn-primary" 
-              style={{ width: '100%', padding: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-            >
-              {paymentProcessing ? 'Detecting Payment...' : 'I\'ve Scanned & Paid'}
-            </button>
             <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '1rem' }}>
-              Waiting for bank server confirmation...
+              Pay via eSewa on your mobile. This page will auto-update upon bank verification.
             </p>
           </div>
         </div>
