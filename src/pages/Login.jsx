@@ -31,12 +31,7 @@ export default function Login() {
       const data = await response.json();
 
       if (!response.ok) {
-        // The user specifically requested "try again" message
-        if (data.error === 'try again') {
-          setError('try again');
-        } else {
-          setError(data.error || 'Login failed');
-        }
+        setError(data.error || 'Login failed');
       } else {
         localStorage.setItem('user', JSON.stringify(data.user));
         navigate('/dashboard');
